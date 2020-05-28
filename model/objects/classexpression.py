@@ -200,6 +200,8 @@ class OWLObjectExactCardinality(OWLObjectCardinalityRestriction):
 
 
 class OWLDataSomeValuesFrom(OWLClassExpression):
+    _hash_idx = 11
+
     def __init__(self, owl_property: OWLDataProperty, filler: OWLDataRange):
         self.property = owl_property
         self.filler = filler
@@ -210,6 +212,9 @@ class OWLDataSomeValuesFrom(OWLClassExpression):
         else:
             return self.property == other.property and \
                    self.filler == other.filler
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + hash(self.filler)
 
 
 class OWLDataAllValuesFrom(OWLClassExpression):

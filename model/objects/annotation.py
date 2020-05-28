@@ -2,6 +2,8 @@ from model.objects.property import OWLAnnotationProperty
 
 
 class OWLAnnotation(object):
+    _hash_idx = 3
+
     def __init__(
             self,
             owl_property: OWLAnnotationProperty,
@@ -24,4 +26,4 @@ class OWLAnnotation(object):
             self.value == other.value
 
     def __hash__(self):
-        return hash(self.owl_property) * hash(self.value)
+        return self._hash_idx * hash(self.owl_property) + hash(self.value)

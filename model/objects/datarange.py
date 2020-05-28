@@ -1,3 +1,5 @@
+from functools import reduce
+
 from rdflib import Literal
 
 from model.objects import HasDatatypeOperands, HasIRI, OWLObject
@@ -59,6 +61,8 @@ class OWLDataOneOf(OWLDataRange):
 
 
 class OWLDatatypeRestriction(OWLDataRange):
+    _hash_idx = 13
+
     def __init__(self, datatype: OWLDatatype, facet_restrictions):
         self.datatype = datatype
         self.facet_restrictions = set()
@@ -73,3 +77,8 @@ class OWLDatatypeRestriction(OWLDataRange):
         else:
             return self.datatype == other.datatype \
                    and self.facet_restrictions == other.facet_restrictions
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.datatype) + \
+               reduce(lambda l, r: l*r,
+                      map(lambda fr: hash(fr), self.facet_restrictions))

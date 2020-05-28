@@ -677,18 +677,24 @@ class FunctionalSyntaxParser(OWLParser):
         ontology_iri = None
         ontology_version_iri = None
         annotations = []
-        axioms = []
+        axioms = set()
 
         for part in parts:
             if isinstance(part, dict):
                 prefixes = part
+
+            elif isinstance(part, OWLAxiom):
+                axioms.add(part)
+
             elif isinstance(part, URIRef):
                 if ontology_iri is None:
                     ontology_iri = part
                 else:
                     ontology_version_iri = part
+
             elif isinstance(part, OWLAnnotation):
                 annotations.append(part)
+
             else:
                 raise RuntimeError()
 
