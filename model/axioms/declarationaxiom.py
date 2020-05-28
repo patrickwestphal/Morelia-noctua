@@ -1,5 +1,6 @@
 from abc import ABC
 
+from model.axioms import OWLAxiom
 from model.objects.datarange import OWLDatatype
 from model.objects.individual import OWLNamedIndividual
 from model.objects.classexpression import OWLClass
@@ -7,7 +8,7 @@ from model.objects.property import OWLObjectProperty, OWLDataProperty, \
     OWLAnnotationProperty
 
 
-class OWLDeclarationAxiom(ABC):
+class OWLDeclarationAxiom(OWLAxiom):
     annotations = []
 
 
