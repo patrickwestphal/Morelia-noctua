@@ -4,7 +4,9 @@ from rdflib import Literal as RDFLiteral
 from rdflib import URIRef, BNode
 
 from model import OWLOntology
-from model.axioms.classaxiom import OWLSubClassOfAxiom
+from model.axioms import OWLAxiom
+from model.axioms.classaxiom import OWLSubClassOfAxiom, \
+    OWLEquivalentClassesAxiom
 from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
     OWLDatatypeDeclarationAxiom, OWLObjectPropertyDeclarationAxiom, \
     OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom, \
@@ -17,7 +19,7 @@ from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
     OWLObjectHasSelf, OWLObjectMinCardinality, OWLObjectMaxCardinality, \
     OWLObjectExactCardinality, OWLDataSomeValuesFrom, OWLDataAllValuesFrom, \
     OWLDataHasValue, OWLDataMinCardinality, OWLDataMaxCardinality, \
-    OWLDataExactCardinality
+    OWLDataExactCardinality, OWLClassExpression
 from model.objects.datarange import OWLDataIntersectionOf, OWLDataUnionOf, \
     OWLDataComplementOf, OWLDatatype, OWLDataOneOf, OWLDatatypeRestriction
 from model.objects.facet import OWLFacetRestriction
@@ -615,13 +617,14 @@ class FunctionalSyntaxParser(OWLParser):
             self.class_expression +
             self.class_expression +
             ZeroOrMore(self.class_expression) +
-            self.close_paren.suppress())
+            self.close_paren.suppress()
+        ).addParseAction(self._create_equivalent_classes_axiom)
 
         # ClassAxiom := SubClassOf | EquivalentClasses | DisjointClasses |
         #   DisjointUnion
         self.class_axiom = \
-            self.sub_class_of  #| \
-            # self.equivalent_classes | \
+            self.sub_class_of | \
+            self.equivalent_classes  #| \
             # self.disjoint_classes | \
             # self.disjoint_unio
 
@@ -708,6 +711,25 @@ class FunctionalSyntaxParser(OWLParser):
                 OWLFacetRestriction(facet, restriction_value))
 
         return OWLDatatypeRestriction(dtype, facet_restrictions)
+
+    @staticmethod
+    def _create_equivalent_classes_axiom(parsed):
+        equiv_classes = set()
+        annotations = set()
+
+        for part in parsed:
+            if isinstance(part, OWLClassExpression):
+                equiv_classes.add(part)
+            elif isinstance(part, OWLAnnotation):
+                annotations.add(part)
+            else:
+                raise RuntimeError(
+                    f'Got unexpected object in EquivalentClasses axiom: {part}')
+
+        if len(annotations) == 0:
+            return OWLEquivalentClassesAxiom(equiv_classes)
+        else:
+            return OWLEquivalentClassesAxiom(equiv_classes, annotations)
 
     @staticmethod
     def _create_sub_cls_of_axiom(parsed):

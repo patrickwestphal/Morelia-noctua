@@ -4,7 +4,8 @@ from rdflib import URIRef, Literal, XSD, BNode
 
 import model
 from model import OWLOntology
-from model.axioms.classaxiom import OWLSubClassOfAxiom
+from model.axioms.classaxiom import OWLSubClassOfAxiom, \
+    OWLEquivalentClassesAxiom
 from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
     OWLObjectUnionOf, OWLObjectComplementOf, OWLObjectOneOf, \
@@ -1157,3 +1158,84 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
         self.assertEqual(
             sub_cls_of_2,
             parser.sub_class_of.parseString(sub_cls_of_str_6)[0])
+
+    def test_equivalent_classes_axiom(self):
+        equivalent_classes_str_1 = \
+            'EquivalentClasses(' \
+            '<http://example.com#Cls1> ' \
+            'DataSomeValuesFrom(<http://example.com#dprop1> ' \
+            'DatatypeRestriction(<http://www.w3.org/2001/XMLSchema#integer> ' \
+            '<http://www.w3.org/2001/XMLSchema#maxExclusive> ' \
+            '"20"^^<http://www.w3.org/2001/XMLSchema#integer>)))'
+
+        equivalent_classes_str_2 = \
+            'EquivalentClasses(' \
+            'ex:Cls1 ' \
+            'DataSomeValuesFrom(ex:dprop1 ' \
+            'DatatypeRestriction(xsd:integer ' \
+            'xsd:maxExclusive "20"^^xsd:integer)))'
+
+        equivalent_classes_str_3 = \
+            'EquivalentClasses(' \
+            'Cls1 ' \
+            'DataSomeValuesFrom(dprop1 ' \
+            'DatatypeRestriction(xsd:integer ' \
+            'xsd:maxExclusive "20"^^xsd:integer)))'
+
+        equivalent_classes_1 = OWLEquivalentClassesAxiom({
+            OWLClass('http://example.com#Cls1'),
+            OWLDataSomeValuesFrom(
+                OWLDataProperty('http://example.com#dprop1'),
+                OWLDatatypeRestriction(
+                    OWLDatatype(XSD.integer),
+                    {
+                        OWLFacetRestriction(
+                            XSD.maxExclusive,
+                            Literal(20, None, XSD.integer))}))})
+
+        equivalent_classes_str_4 = \
+            'EquivalentClasses(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en)' \
+            '<http://example.com#Cls1> ' \
+            'DataSomeValuesFrom(<http://example.com#dprop1> ' \
+            'DatatypeRestriction(<http://www.w3.org/2001/XMLSchema#integer> ' \
+            '<http://www.w3.org/2001/XMLSchema#maxExclusive> ' \
+            '"20"^^<http://www.w3.org/2001/XMLSchema#integer>)))'
+
+        equivalent_classes_2 = OWLEquivalentClassesAxiom({
+            OWLClass('http://example.com#Cls1'),
+            OWLDataSomeValuesFrom(
+                OWLDataProperty('http://example.com#dprop1'),
+                OWLDatatypeRestriction(
+                    OWLDatatype(XSD.integer),
+                    {
+                        OWLFacetRestriction(
+                            XSD.maxExclusive,
+                            Literal(20, None, XSD.integer))
+                    }))}, {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en'))})
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            equivalent_classes_1,
+            parser.equivalent_classes.parseString(equivalent_classes_str_1)[0])
+
+        self.assertEqual(
+            equivalent_classes_1,
+            parser.equivalent_classes.parseString(equivalent_classes_str_2)[0])
+
+        self.assertEqual(
+            equivalent_classes_1,
+            parser.equivalent_classes.parseString(equivalent_classes_str_3)[0])
+
+        self.assertEqual(
+            equivalent_classes_2,
+            parser.equivalent_classes.parseString(equivalent_classes_str_4)[0])
+
