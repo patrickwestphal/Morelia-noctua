@@ -6,6 +6,8 @@ import model
 from model import OWLOntology
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
+from model.axioms.owlobjectpropertyaxiom import \
+    OWLSubObjectPropertyAxiomOfAxiom, OWLEquivalentObjectPropertiesAxiom
 from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
     OWLObjectUnionOf, OWLObjectComplementOf, OWLObjectOneOf, \
@@ -1398,3 +1400,174 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             disjoint_union_1,
             parser.disjoint_union.parseString(disjoint_union_str_1)[0])
 
+    def test_sub_object_property_axiom(self):
+        sub_obj_prop_axiom_str_1 = \
+            'SubObjectPropertyOf(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_uri>) ' \
+            '<http://example.com#subObjProp1> <http://example.com#objProp1>)'
+
+        sub_obj_prop_axiom_str_2 = \
+            'SubObjectPropertyOf(' \
+            'Annotation(ex:ann "some annotation"@en) ' \
+            'Annotation(ex:ann2 ex:some_uri) ' \
+            'ex:subObjProp1 ex:objProp1)'
+
+        sub_obj_prop_axiom_str_3 = \
+            'SubObjectPropertyOf(' \
+            'Annotation(ann "some annotation"@en) ' \
+            'Annotation(ann2 some_uri) ' \
+            'subObjProp1 objProp1)'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_uri'))}
+
+        sub_obj_prop_axiom_1 = OWLSubObjectPropertyAxiomOfAxiom(
+            OWLObjectProperty('http://example.com#subObjProp1'),
+            OWLObjectProperty('http://example.com#objProp1'),
+            annotations)
+
+        sub_obj_prop_axiom_str_4 = \
+            'SubObjectPropertyOf(' \
+            'ObjectInverseOf(<http://example.com#obj_prop>) ' \
+            '<http://example.com#objProp1>)'
+
+        sub_obj_prop_axiom_str_5 = \
+            'SubObjectPropertyOf(ObjectInverseOf(ex:obj_prop) ex:objProp1)'
+
+        sub_obj_prop_axiom_str_6 = \
+            'SubObjectPropertyOf(ObjectInverseOf(obj_prop) objProp1)'
+
+        sub_obj_prop_axiom_2 = OWLSubObjectPropertyAxiomOfAxiom(
+            OWLObjectInverseOf(
+                OWLObjectProperty('http://example.com#obj_prop')),
+            OWLObjectProperty('http://example.com#objProp1'))
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            sub_obj_prop_axiom_1,
+            parser.sub_object_property_of.parseString(
+                sub_obj_prop_axiom_str_1)[0])
+
+        self.assertEqual(
+            sub_obj_prop_axiom_1,
+            parser.sub_object_property_of.parseString(
+                sub_obj_prop_axiom_str_2)[0])
+
+        self.assertEqual(
+            sub_obj_prop_axiom_1,
+            parser.sub_object_property_of.parseString(
+                sub_obj_prop_axiom_str_3)[0])
+
+        self.assertEqual(
+            sub_obj_prop_axiom_2,
+            parser.sub_object_property_of.parseString(
+                sub_obj_prop_axiom_str_4)[0])
+
+        self.assertEqual(
+            sub_obj_prop_axiom_2,
+            parser.sub_object_property_of.parseString(
+                sub_obj_prop_axiom_str_5)[0])
+
+        self.assertEqual(
+            sub_obj_prop_axiom_2,
+            parser.sub_object_property_of.parseString(
+                sub_obj_prop_axiom_str_6)[0])
+
+    def test_equivalent_object_properties_axiom(self):
+        equiv_obj_props_axiom_str_1 = \
+            'EquivalentObjectProperties(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_uri>) ' \
+            '<http://example.com#invObjProp1> ' \
+            'ObjectInverseOf(<http://example.com#objProp1>))'
+
+        equiv_obj_props_axiom_str_2 = \
+            'EquivalentObjectProperties(' \
+            'Annotation(ex:ann "some annotation"@en) ' \
+            'Annotation(ex:ann2 ex:some_uri) ' \
+            'ex:invObjProp1 ' \
+            'ObjectInverseOf(ex:objProp1))'
+
+        equiv_obj_props_axiom_str_3 = \
+            'EquivalentObjectProperties(' \
+            'Annotation(ann "some annotation"@en) ' \
+            'Annotation(ann2 some_uri) ' \
+            'invObjProp1 ' \
+            'ObjectInverseOf(objProp1))'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_uri'))}
+
+        equiv_obj_props_axiom_1 = OWLEquivalentObjectPropertiesAxiom({
+            OWLObjectProperty('http://example.com#invObjProp1'),
+            OWLObjectInverseOf(
+                OWLObjectProperty('http://example.com#objProp1'))}, annotations)
+
+        equiv_obj_props_axiom_str_4 = \
+            'EquivalentObjectProperties(' \
+            '<http://example.com#invObjProp1> ' \
+            '<http://example.com#objProp1>)'
+
+        equiv_obj_props_axiom_str_5 = \
+            'EquivalentObjectProperties(ex:invObjProp1 ex:objProp1)'
+
+        equiv_obj_props_axiom_str_6 = \
+            'EquivalentObjectProperties(invObjProp1 objProp1)'
+
+        equiv_obj_props_axiom_2 = OWLEquivalentObjectPropertiesAxiom({
+            OWLObjectProperty('http://example.com#invObjProp1'),
+            OWLObjectProperty('http://example.com#objProp1')})
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            equiv_obj_props_axiom_1,
+            parser.equivalent_object_properties.parseString(
+                equiv_obj_props_axiom_str_1)[0])
+
+        self.assertEqual(
+            equiv_obj_props_axiom_1,
+            parser.equivalent_object_properties.parseString(
+                equiv_obj_props_axiom_str_2)[0])
+
+        self.assertEqual(
+            equiv_obj_props_axiom_1,
+            parser.equivalent_object_properties.parseString(
+                equiv_obj_props_axiom_str_3)[0])
+
+        self.assertEqual(
+            equiv_obj_props_axiom_2,
+            parser.equivalent_object_properties.parseString(
+                equiv_obj_props_axiom_str_4)[0])
+
+        self.assertEqual(
+            equiv_obj_props_axiom_2,
+            parser.equivalent_object_properties.parseString(
+                equiv_obj_props_axiom_str_5)[0])
+
+        self.assertEqual(
+            equiv_obj_props_axiom_2,
+            parser.equivalent_object_properties.parseString(
+                equiv_obj_props_axiom_str_6)[0])
