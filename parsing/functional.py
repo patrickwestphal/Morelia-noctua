@@ -6,7 +6,7 @@ from rdflib import URIRef, BNode
 from model import OWLOntology
 from model.axioms import OWLAxiom
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
-    OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom
+    OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
 from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
     OWLDatatypeDeclarationAxiom, OWLObjectPropertyDeclarationAxiom, \
     OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom, \
@@ -633,6 +633,25 @@ class FunctionalSyntaxParser(OWLParser):
             self.close_paren.suppress()
         ).addParseAction(self._create_disjoint_classes_axiom)
 
+        # DisjointClassExpressions :=
+        #       ClassExpression ClassExpression { ClassExpression }
+        self.disjoint_class_expressions = \
+            self.class_expression + \
+            self.class_expression + \
+            ZeroOrMore(self.class_expression)
+
+        # DisjointUnion :=
+        #    'DisjointUnion' '(' axiomAnnotations Class
+        #                        disjointClassExpressions ')'
+        self.disjoint_union = (
+            Literal('DisjointUnion').suppress() +
+            self.open_paren.suppress() +
+            self.axiom_annotations +
+            self.class_ +
+            self.disjoint_class_expressions +
+            self.close_paren.suppress()
+        ).addParseAction(self._create_disjoint_union_axiom)
+
         # ClassAxiom := SubClassOf | EquivalentClasses | DisjointClasses |
         #   DisjointUnion
         self.class_axiom = \
@@ -749,6 +768,30 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLDisjointClassesAxiom(disjoint_classes)
         else:
             return OWLDisjointClassesAxiom(disjoint_classes, annotations)
+
+    @staticmethod
+    def _create_disjoint_union_axiom(parsed):
+        class_expressions = set()
+        annotations = set()
+
+        owl_class = None
+
+        for part in parsed:
+            if isinstance(part, OWLClass) and owl_class is None:
+                owl_class = part
+            elif isinstance(part, OWLClassExpression):
+                class_expressions.add(part)
+            elif isinstance(part, OWLAnnotation):
+                annotations.add(part)
+            else:
+                raise RuntimeError(
+                    f'Got unexpected object in DisjointUnion axiom: {part}')
+
+        if len(annotations) == 0:
+            return OWLDisjointUnionAxiom(owl_class, class_expressions)
+        else:
+            return OWLDisjointUnionAxiom(
+                owl_class, class_expressions, annotations)
 
     @staticmethod
     def _create_equivalent_classes_axiom(parsed):

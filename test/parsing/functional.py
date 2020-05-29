@@ -5,7 +5,7 @@ from rdflib import URIRef, Literal, XSD, BNode
 import model
 from model import OWLOntology
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
-    OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom
+    OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
 from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
     OWLObjectUnionOf, OWLObjectComplementOf, OWLObjectOneOf, \
@@ -1217,6 +1217,25 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
                 OWLAnnotationProperty('http://example.com#ann'),
                 Literal('some annotation', 'en'))})
 
+        equivalent_classes_str_5 = \
+            'EquivalentClasses(ex:DataMin3Prop1 ' \
+            'DataMinCardinality(3 ex:dataProp1))'
+
+        equivalent_classes_3 = OWLEquivalentClassesAxiom({
+            OWLClass('http://example.com#DataMin3Prop1'),
+            OWLDataMinCardinality(
+                OWLDataProperty('http://example.com#dataProp1'), 3)})
+
+        equivalent_classes_str_6 = \
+            'EquivalentClasses(' \
+            'ex:DataHasVal5 DataHasValue(ex:dataProp2 "5"^^xsd:integer))'
+
+        equivalent_classes_4 = OWLEquivalentClassesAxiom({
+            OWLClass('http://example.com#DataHasVal5'),
+            OWLDataHasValue(
+                OWLDataProperty('http://example.com#dataProp2'),
+                Literal(5, None, XSD.integer))})
+
         prefixes = {
             'ex': 'http://example.com#',
             'xsd': 'http://www.w3.org/2001/XMLSchema#',
@@ -1238,6 +1257,14 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
         self.assertEqual(
             equivalent_classes_2,
             parser.equivalent_classes.parseString(equivalent_classes_str_4)[0])
+
+        self.assertEqual(
+            equivalent_classes_3,
+            parser.equivalent_classes.parseString(equivalent_classes_str_5)[0])
+
+        self.assertEqual(
+            equivalent_classes_4,
+            parser.equivalent_classes.parseString(equivalent_classes_str_6)[0])
 
     def test_disjoint_classes_axiom(self):
         disjoint_classes_str_1 = \
@@ -1318,3 +1345,56 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
         self.assertEqual(
             disjoint_classes_2,
             parser.disjoint_classes.parseString(disjoint_classes_str_4)[0])
+
+    def test_disjoint_union_axiom(self):
+        disjoint_union_str_1 = \
+            'DisjointUnion(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_iri>) ' \
+            '<http://example.com#UnionCls> ' \
+            'DataSomeValuesFrom(<http://example.com#dprop1> ' \
+            'DatatypeRestriction(<http://www.w3.org/2001/XMLSchema#integer> ' \
+            '<http://www.w3.org/2001/XMLSchema#maxExclusive> ' \
+            '"20"^^<http://www.w3.org/2001/XMLSchema#integer>))' \
+            '<http://example.com#AnotherCls>' \
+            '<http://example.com#YetAnotherCls>' \
+            '<http://example.com#EvenYetAnotherCls>)'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_iri'))}
+
+        some_vals_from_ce = OWLDataSomeValuesFrom(
+            OWLDataProperty('http://example.com#dprop1'),
+            OWLDatatypeRestriction(
+                OWLDatatype(XSD.integer),
+                {
+                    OWLFacetRestriction(
+                        XSD.maxExclusive,
+                        Literal(20, None, XSD.integer))}))
+
+        disjoint_union_1 = OWLDisjointUnionAxiom(
+            OWLClass('http://example.com#UnionCls'),
+            {
+                some_vals_from_ce,
+                OWLClass('http://example.com#AnotherCls'),
+                OWLClass('http://example.com#YetAnotherCls'),
+                OWLClass('http://example.com#EvenYetAnotherCls')
+            },
+            annotations)
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            disjoint_union_1,
+            parser.disjoint_union.parseString(disjoint_union_str_1)[0])
+

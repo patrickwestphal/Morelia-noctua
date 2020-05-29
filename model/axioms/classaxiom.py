@@ -1,6 +1,7 @@
 from functools import reduce
 
 from model.axioms import OWLAxiom
+from model.objects import HasOperands
 from model.objects.classexpression import OWLClassExpression, OWLClass
 
 
@@ -94,3 +95,34 @@ class OWLDisjointClassesAxiom(OWLClassAxiom):
 
         return tmp
 
+
+class OWLDisjointUnionAxiom(OWLClassAxiom, HasOperands):
+    _hash_idx = 157
+
+    def __init__(
+            self,
+            owl_class: OWLClass,
+            class_expressions,
+            annotations=None):
+
+        self.owl_class = owl_class
+        self.operands = self._init_operands(class_expressions)
+        self.annotations = annotations
+
+    def __eq__(self, other):
+        if not isinstance(other, OWLDisjointUnionAxiom):
+            return False
+        else:
+            return self.owl_class == other.owl_class \
+                   and self.operands == other.operands \
+                   and self.annotations == other.annotations
+
+    def __hash__(self):
+        tmp = self._hash_idx * hash(self.owl_class) + reduce(
+            lambda l, r: self._hash_idx*l+r,
+            map(lambda o: hash(o), self.operands))
+
+        if self.operands is not None:
+            tmp += reduce(
+                lambda l, r: self._hash_idx*l+r,
+                map(lambda a: hash(a), self.annotations))
