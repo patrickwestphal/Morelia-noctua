@@ -11,7 +11,7 @@ class OWLObjectPropertyAxiom(OWLAxiom):
     pass
 
 
-class OWLSubObjectPropertyAxiomOfAxiom(OWLObjectPropertyAxiom):
+class OWLSubObjectPropertyOfAxiom(OWLObjectPropertyAxiom):
     _hash_idx = 193
 
     def __init__(
@@ -24,7 +24,7 @@ class OWLSubObjectPropertyAxiomOfAxiom(OWLObjectPropertyAxiom):
         self.annotations = annotations
 
     def __eq__(self, other):
-        if not isinstance(other, OWLSubObjectPropertyAxiomOfAxiom):
+        if not isinstance(other, OWLSubObjectPropertyOfAxiom):
             return False
         else:
             is_equal = self.sub_property == other.sub_property \
