@@ -8,11 +8,18 @@ class OWLIndividual(OWLObject):
 
 
 class OWLNamedIndividual(OWLIndividual, HasIRI):
+    _hash_idx = 107
+
     def __init__(self, individual_iri_or_str):
         self.iri = self._init_iri(individual_iri_or_str)
 
+    def __hash__(self):
+        return self._hash_idx * hash(self.iri)
+
 
 class OWLAnonymousIndividual(OWLIndividual):
+    _hash_idx = 109
+
     def __init__(self, bnode_or_bnode_id):
         if isinstance(bnode_or_bnode_id, BNode):
             self.bnode = bnode_or_bnode_id
@@ -30,4 +37,4 @@ class OWLAnonymousIndividual(OWLIndividual):
             return self.bnode == other.bnode
 
     def __hash__(self):
-        return hash(self.bnode)
+        return self._hash_idx * hash(self.bnode)

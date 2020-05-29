@@ -1,5 +1,7 @@
+from functools import reduce
+
 from model.axioms import OWLAxiom
-from model.objects.classexpression import OWLClassExpression
+from model.objects.classexpression import OWLClassExpression, OWLClass
 
 
 class OWLClassAxiom(OWLAxiom):
@@ -7,6 +9,8 @@ class OWLClassAxiom(OWLAxiom):
 
 
 class OWLSubClassOfAxiom(OWLClassAxiom):
+    _hash_idx = 139
+
     def __init__(
             self,
             sub_class: OWLClassExpression,
@@ -25,9 +29,20 @@ class OWLSubClassOfAxiom(OWLClassAxiom):
                    and self.super_class == other.super_class \
                    and self.annotations == other.annotations
 
+    def __hash__(self):
+        tmp = self._hash_idx * hash(self.sub_class) + \
+              (self._hash_idx * hash(self.super_class))
+
+        if self.annotations:
+            tmp += reduce(
+                lambda l, r: self._hash_idx*l+r,
+                map(lambda a: hash(a), self.annotations))
+
+        return tmp
+
 
 class OWLEquivalentClassesAxiom(OWLClassAxiom):
-    _hash_idx = 7
+    _hash_idx = 149
 
     def __init__(self, class_expressions, annotations=None):
         self.class_expressions = class_expressions
@@ -41,12 +56,20 @@ class OWLEquivalentClassesAxiom(OWLClassAxiom):
                    and self.annotations == other.annotations
 
     def __hash__(self):
-        return self._hash_idx * hash(self.class_expressions) \
-               + hash(self.annotations)
+        tmp = reduce(
+            lambda l, r: self._hash_idx*l+r,
+            map(lambda ce: hash(ce), self.class_expressions))
+
+        if self.annotations:
+            tmp += reduce(
+                lambda l, r: self._hash_idx*l+r,
+                map(lambda a: hash(a), self.annotations))
+
+        return tmp
 
 
 class OWLDisjointClassesAxiom(OWLClassAxiom):
-    _hash_idx = 17
+    _hash_idx = 151
 
     def __init__(self, class_expressions, annotations=None):
         self.class_expressions = class_expressions
@@ -60,5 +83,14 @@ class OWLDisjointClassesAxiom(OWLClassAxiom):
                    and self.annotations == other.annotations
 
     def __hash__(self):
-        return self._hash_idx * hash(self.class_expressions) + \
-               hash(self.annotations)
+        tmp = reduce(
+            lambda l, r: self._hash_idx*l+r,
+            map(lambda ce: hash(ce), self.class_expressions))
+
+        if self.annotations:
+            tmp += reduce(
+                lambda l, r: self._hash_idx*l+r,
+                map(lambda a: hash(a), self.annotations))
+
+        return tmp
+

@@ -16,7 +16,7 @@ LANG_RANGE = URIRef(RDF.uri + 'langRange')
 
 
 class OWLFacetRestriction(OWLObject):
-    _hash_idx = 5
+    _hash_idx = 103
 
     def __init__(self, facet: URIRef, facet_value: Literal):
         self.facet = facet

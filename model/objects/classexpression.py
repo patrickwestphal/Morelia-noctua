@@ -1,4 +1,5 @@
 from abc import ABC
+from functools import reduce
 
 from rdflib import URIRef, BNode, OWL, Literal, RDFS
 
@@ -14,24 +15,42 @@ class OWLClassExpression(ABC):
 
 
 class OWLClass(OWLClassExpression, HasIRI):
+    _hash_idx = 5
+
     def __init__(self, iri_or_iri_str):
         self.iri = self._init_iri(iri_or_iri_str)
 
     def __hash__(self):
-        return hash(self.iri)
+        return self._hash_idx * hash(self.iri)
 
 
 class OWLObjectIntersectionOf(OWLClassExpression, HasOperands):
+    _hash_idx = 7
+
     def __init__(self, *operands):
         self.operands = self._init_operands(operands)
+
+    def __hash__(self):
+        return reduce(
+            lambda l, r: self._hash_idx*l+r,
+            map(lambda o: hash(o), self.operands))
 
 
 class OWLObjectUnionOf(OWLClassExpression, HasOperands):
+    _hash_idx = 11
+
     def __init__(self, *operands):
         self.operands = self._init_operands(operands)
 
+    def __hash__(self):
+        return reduce(
+            lambda l, r: self._hash_idx*l+r,
+            map(lambda o: hash(o), self.operands))
+
 
 class OWLObjectComplementOf(OWLClassExpression):
+    _hash_idx = 13
+
     def __init__(self, operand: OWLClassExpression):
         self.operand = operand
 
@@ -47,8 +66,13 @@ class OWLObjectComplementOf(OWLClassExpression):
     def __repr__(self):
         return str(self)
 
+    def __hash__(self):
+        return self._hash_idx * hash(self.operand)
+
 
 class OWLObjectOneOf(OWLClassExpression):
+    _hash_idx = 17
+
     def __init__(self, *individuals):
         self.individuals = set()
 
@@ -76,8 +100,15 @@ class OWLObjectOneOf(OWLClassExpression):
         else:
             return self.individuals == other.individuals
 
+    def __hash__(self):
+        return reduce(
+            lambda l, r: self._hash_idx*l+r,
+            map(lambda i: hash(i), self.individuals))
+
 
 class OWLObjectSomeValuesFrom(OWLClassExpression):
+    _hash_idx = 19
+
     def __init__(
             self,
             owl_property: OWLObjectPropertyExpression,
@@ -93,8 +124,13 @@ class OWLObjectSomeValuesFrom(OWLClassExpression):
             return self.property == other.property \
                    and self.filler == other.filler
 
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + hash(self.filler)
+
 
 class OWLObjectAllValuesFrom(OWLClassExpression):
+    _hash_idx = 23
+
     def __init__(
             self,
             owl_property: OWLObjectPropertyExpression,
@@ -110,8 +146,13 @@ class OWLObjectAllValuesFrom(OWLClassExpression):
             return self.property == other.property \
                    and self.filler == other.filler
 
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + hash(self.filler)
+
 
 class OWLObjectHasValue(OWLClassExpression):
+    _hash_idx = 29
+
     def __init__(
             self,
             owl_property: OWLObjectPropertyExpression,
@@ -126,8 +167,13 @@ class OWLObjectHasValue(OWLClassExpression):
         else:
             return self.property == other.property and self.value == other.value
 
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + hash(self.value)
+
 
 class OWLObjectHasSelf(OWLClassExpression):
+    _hash_idx = 31
+
     def __init__(self, owl_property: OWLObjectPropertyExpression):
         self.property = owl_property
 
@@ -136,6 +182,9 @@ class OWLObjectHasSelf(OWLClassExpression):
             return False
         else:
             return self.property == other.property
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.property)
 
 
 class OWLObjectCardinalityRestriction(OWLClassExpression):
@@ -153,6 +202,8 @@ class OWLObjectCardinalityRestriction(OWLClassExpression):
 
 
 class OWLObjectMinCardinality(OWLObjectCardinalityRestriction):
+    _hash_idx = 37
+
     def __init__(
             self,
             owl_property: OWLObjectPropertyExpression,
@@ -166,9 +217,15 @@ class OWLObjectMinCardinality(OWLObjectCardinalityRestriction):
             self.filler = OWLClass(OWL.Thing)
         else:
             self.filler = filler
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + \
+               (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
 
 
 class OWLObjectMaxCardinality(OWLObjectCardinalityRestriction):
+    _hash_idx = 41
+
     def __init__(
             self,
             owl_property: OWLObjectPropertyExpression,
@@ -181,9 +238,15 @@ class OWLObjectMaxCardinality(OWLObjectCardinalityRestriction):
             self.filler = OWLClass(OWL.Thing)
         else:
             self.filler = filler
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + \
+               (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
 
 
 class OWLObjectExactCardinality(OWLObjectCardinalityRestriction):
+    _hash_idx = 53
+
     def __init__(
             self,
             owl_property: OWLObjectPropertyExpression,
@@ -198,9 +261,13 @@ class OWLObjectExactCardinality(OWLObjectCardinalityRestriction):
         else:
             self.filler = filler
 
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + \
+               (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
+
 
 class OWLDataSomeValuesFrom(OWLClassExpression):
-    _hash_idx = 11
+    _hash_idx = 47
 
     def __init__(self, owl_property: OWLDataProperty, filler: OWLDataRange):
         self.property = owl_property
@@ -218,6 +285,8 @@ class OWLDataSomeValuesFrom(OWLClassExpression):
 
 
 class OWLDataAllValuesFrom(OWLClassExpression):
+    _hash_idx = 53
+
     def __init__(self, owl_property: OWLDataProperty, filler: OWLDataRange):
         self.property = owl_property
         self.filler = filler
@@ -229,8 +298,13 @@ class OWLDataAllValuesFrom(OWLClassExpression):
             return self.property == other.property \
                    and self.filler == other.filler
 
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + hash(self.filler)
+
 
 class OWLDataHasValue(OWLClassExpression):
+    _hash_idx = 59
+
     def __init__(self, owl_property: OWLDataProperty, value: Literal):
         self.property = owl_property
         self.value = value
@@ -240,6 +314,9 @@ class OWLDataHasValue(OWLClassExpression):
             return False
         else:
             return self.property == other.property and self.value == other.value
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + hash(self.value)
 
 
 class OWLDataCardinalityRestriction(OWLClassExpression):
@@ -257,6 +334,8 @@ class OWLDataCardinalityRestriction(OWLClassExpression):
 
 
 class OWLDataMinCardinality(OWLDataCardinalityRestriction):
+    _hash_idx = 61
+
     def __init__(
             self,
             owl_property: OWLDataProperty,
@@ -270,9 +349,15 @@ class OWLDataMinCardinality(OWLDataCardinalityRestriction):
             self.filler = OWLDatatype(RDFS.Literal)
         else:
             self.filler = filler
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + \
+               (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
 
 
 class OWLDataMaxCardinality(OWLDataCardinalityRestriction):
+    _hash_idx = 67
+
     def __init__(
             self,
             owl_property: OWLDataProperty,
@@ -286,9 +371,15 @@ class OWLDataMaxCardinality(OWLDataCardinalityRestriction):
             self.filler = OWLDatatype(RDFS.Literal)
         else:
             self.filler = filler
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + \
+               (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
 
 
 class OWLDataExactCardinality(OWLDataCardinalityRestriction):
+    _hash_idx = 71
+
     def __init__(
             self,
             owl_property: OWLDataProperty,
@@ -302,3 +393,7 @@ class OWLDataExactCardinality(OWLDataCardinalityRestriction):
             self.filler = OWLDatatype(RDFS.Literal)
         else:
             self.filler = filler
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.property) + \
+               (self._hash_idx * hash(self.cardinality)) + hash(self.filler)

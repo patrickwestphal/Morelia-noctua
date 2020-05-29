@@ -11,6 +11,8 @@ class OWLDataRange(OWLObject):
 
 
 class OWLDatatype(OWLDataRange, HasIRI):
+    _hash_idx = 73
+
     def __init__(self, iri_or_iri_str):
         self.iri = self._init_iri(iri_or_iri_str)
 
@@ -21,20 +23,36 @@ class OWLDatatype(OWLDataRange, HasIRI):
             return self.iri == other.iri
 
     def __hash__(self):
-        return hash(self.iri)
+        return self._hash_idx * hash(self.iri)
 
 
 class OWLDataIntersectionOf(OWLDataRange, HasDatatypeOperands):
+    _hash_idx = 79
+
     def __init__(self, *operands):
         self.operands = self._init_operands(operands)
+
+    def __hash__(self):
+        return reduce(
+            lambda l, r: self._hash_idx*l+r,
+            map(lambda o: hash(o), self.operands))
 
 
 class OWLDataUnionOf(OWLDataRange, HasDatatypeOperands):
+    _hash_idx = 83
+
     def __init__(self, *operands):
         self.operands = self._init_operands(operands)
 
+    def __hash__(self):
+        return reduce(
+            lambda l, r: self._hash_idx*l+r,
+            map(lambda o: hash(o), self.operands))
+
 
 class OWLDataComplementOf(OWLDataRange):
+    _hash_idx = 89
+
     def __init__(self, data_range: OWLDataRange):
         self.data_range = data_range
 
@@ -44,8 +62,13 @@ class OWLDataComplementOf(OWLDataRange):
         else:
             return self.data_range == other.data_range
 
+    def __hash__(self):
+        return self._hash_idx * hash(self.data_range)
+
 
 class OWLDataOneOf(OWLDataRange):
+    _hash_idx = 97
+
     def __init__(self, *values):
         self.operands = set()
 
@@ -59,9 +82,14 @@ class OWLDataOneOf(OWLDataRange):
         else:
             return self.operands == other.operands
 
+    def __hash__(self):
+        return reduce(
+            lambda l, r: self._hash_idx*l+r,
+            map(lambda l: hash(l), self.operands))
+
 
 class OWLDatatypeRestriction(OWLDataRange):
-    _hash_idx = 13
+    _hash_idx = 101
 
     def __init__(self, datatype: OWLDatatype, facet_restrictions):
         self.datatype = datatype

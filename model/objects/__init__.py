@@ -10,9 +10,6 @@ class OWLObject(ABC):
 class HasIRI(OWLObject):
     iri = None
 
-    def __hash__(self):
-        return hash(self.iri)
-
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -30,9 +27,6 @@ class HasIRI(OWLObject):
 
 class HasOperands(OWLObject):
     operands = None
-
-    def __hash__(self):
-        return hash(self.operands)
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -62,9 +56,6 @@ class HasOperands(OWLObject):
 
 class HasDatatypeOperands(OWLObject):
     operands = None
-
-    def __hash__(self):
-        return hash(self.operands)
 
     def __eq__(self, other):
         if not type(self) == type(other):

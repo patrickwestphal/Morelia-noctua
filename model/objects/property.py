@@ -16,16 +16,28 @@ class OWLObjectPropertyExpression(OWLObject):
 
 
 class OWLAnnotationProperty(OWLProperty):
+    _hash_idx = 113
+
     def __init__(self, property_iri_or_iri_str):
         self.iri = self._init_iri(property_iri_or_iri_str)
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.iri)
 
 
 class OWLObjectProperty(OWLProperty, OWLObjectPropertyExpression):
+    _hash_idx = 127
+
     def __init__(self, property_iri_or_iri_str):
         self.iri = self._init_iri(property_iri_or_iri_str)
 
+    def __hash__(self):
+        return self._hash_idx * hash(self.iri)
+
 
 class OWLObjectInverseOf(OWLObjectPropertyExpression):
+    _hash_idx = 131
+
     def __init__(self, inverse_property: OWLObjectProperty):
         self.inverse_property = inverse_property
 
@@ -35,7 +47,15 @@ class OWLObjectInverseOf(OWLObjectPropertyExpression):
         else:
             return self.inverse_property == other.inverse_property
 
+    def __hash__(self):
+        return self._hash_idx * hash(self.inverse_property)
+
 
 class OWLDataProperty(OWLProperty):
+    _hash_idx = 137
+
     def __init__(self, property_iri_or_iri_str):
         self.iri = self._init_iri(property_iri_or_iri_str)
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.iri)
