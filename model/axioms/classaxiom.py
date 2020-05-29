@@ -43,3 +43,22 @@ class OWLEquivalentClassesAxiom(OWLClassAxiom):
     def __hash__(self):
         return self._hash_idx * hash(self.class_expressions) \
                + hash(self.annotations)
+
+
+class OWLDisjointClassesAxiom(OWLClassAxiom):
+    _hash_idx = 17
+
+    def __init__(self, class_expressions, annotations=None):
+        self.class_expressions = class_expressions
+        self.annotations = annotations
+
+    def __eq__(self, other):
+        if not isinstance(other, OWLDisjointClassesAxiom):
+            return False
+        else:
+            return self.class_expressions == other.class_expressions \
+                   and self.annotations == other.annotations
+
+    def __hash__(self):
+        return self._hash_idx * hash(self.class_expressions) + \
+               hash(self.annotations)

@@ -5,7 +5,7 @@ from rdflib import URIRef, Literal, XSD, BNode
 import model
 from model import OWLOntology
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
-    OWLEquivalentClassesAxiom
+    OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom
 from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
     OWLObjectUnionOf, OWLObjectComplementOf, OWLObjectOneOf, \
@@ -1239,3 +1239,82 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             equivalent_classes_2,
             parser.equivalent_classes.parseString(equivalent_classes_str_4)[0])
 
+    def test_disjoint_classes_axiom(self):
+        disjoint_classes_str_1 = \
+            'DisjointClasses(' \
+            '<http://example.com#Cls1> ' \
+            'DataSomeValuesFrom(<http://example.com#dprop1> ' \
+            'DatatypeRestriction(<http://www.w3.org/2001/XMLSchema#integer> ' \
+            '<http://www.w3.org/2001/XMLSchema#maxExclusive> ' \
+            '"20"^^<http://www.w3.org/2001/XMLSchema#integer>)))'
+
+        disjoint_classes_str_2 = \
+            'DisjointClasses(' \
+            'ex:Cls1 ' \
+            'DataSomeValuesFrom(ex:dprop1 ' \
+            'DatatypeRestriction(xsd:integer ' \
+            'xsd:maxExclusive "20"^^xsd:integer)))'
+
+        disjoint_classes_str_3 = \
+            'DisjointClasses(' \
+            'Cls1 ' \
+            'DataSomeValuesFrom(dprop1 ' \
+            'DatatypeRestriction(xsd:integer ' \
+            'xsd:maxExclusive "20"^^xsd:integer)))'
+
+        disjoint_classes_1 = OWLDisjointClassesAxiom({
+            OWLClass('http://example.com#Cls1'),
+            OWLDataSomeValuesFrom(
+                OWLDataProperty('http://example.com#dprop1'),
+                OWLDatatypeRestriction(
+                    OWLDatatype(XSD.integer),
+                    {
+                        OWLFacetRestriction(
+                            XSD.maxExclusive,
+                            Literal(20, None, XSD.integer))}))})
+
+        disjoint_classes_str_4 = \
+            'DisjointClasses(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en)' \
+            '<http://example.com#Cls1> ' \
+            'DataSomeValuesFrom(<http://example.com#dprop1> ' \
+            'DatatypeRestriction(<http://www.w3.org/2001/XMLSchema#integer> ' \
+            '<http://www.w3.org/2001/XMLSchema#maxExclusive> ' \
+            '"20"^^<http://www.w3.org/2001/XMLSchema#integer>)))'
+
+        disjoint_classes_2 = OWLDisjointClassesAxiom({
+            OWLClass('http://example.com#Cls1'),
+            OWLDataSomeValuesFrom(
+                OWLDataProperty('http://example.com#dprop1'),
+                OWLDatatypeRestriction(
+                    OWLDatatype(XSD.integer),
+                    {
+                        OWLFacetRestriction(
+                            XSD.maxExclusive,
+                            Literal(20, None, XSD.integer))
+                    }))}, {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en'))})
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            disjoint_classes_1,
+            parser.disjoint_classes.parseString(disjoint_classes_str_1)[0])
+
+        self.assertEqual(
+            disjoint_classes_1,
+            parser.disjoint_classes.parseString(disjoint_classes_str_2)[0])
+
+        self.assertEqual(
+            disjoint_classes_1,
+            parser.disjoint_classes.parseString(disjoint_classes_str_3)[0])
+
+        self.assertEqual(
+            disjoint_classes_2,
+            parser.disjoint_classes.parseString(disjoint_classes_str_4)[0])
