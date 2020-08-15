@@ -163,5 +163,27 @@ class OWLLinkReasoner(OWLReasoner):
 
         return subclasses
 
-    def get_superclasses(self, class_expression):
-        raise NotImplementedError()
+    def get_superclasses(self, class_expression, direct=False):
+        request_element = self._init_request()
+
+        get_subclasses_element = SubElement(request_element, 'GetSuperClasses')
+        get_subclasses_element.set('direct', str(direct).lower())
+        get_subclasses_element.set('kb', self.kb_uri)
+
+        get_subclasses_element.append(
+            _translate_class_expression(class_expression))
+
+        response = requests.post(
+            self.server_url,
+            tostring(request_element))
+
+        etree = fromstring(response.content)
+        superclasses = set()
+        for synset_node in etree.findall(
+                '*/owllink:ClassSynset', self._prefixes):
+
+            for ce_node in synset_node.getchildren():
+                superclasses.add(self._make_class_expression(ce_node))
+
+        return superclasses
+
