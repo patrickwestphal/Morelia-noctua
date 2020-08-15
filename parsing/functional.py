@@ -717,6 +717,18 @@ class FunctionalSyntaxParser(OWLParser):
             self.close_paren.suppress()
         ).addParseAction(self._create_inverse_obj_props_axiom)
 
+        # ObjectPropertyDomain :=
+        #   'ObjectPropertyDomain' '(' axiomAnnotations ObjectPropertyExpression
+        #   ClassExpression ')'
+        self.object_property_domain = (
+            Literal('ObjectPropertyDomain').suppress() +
+            self.open_paren.suppress() +
+            self.axiom_annotations +
+            self.object_property_expression +
+            self.class_expression +
+            self.close_paren.suppress()
+        ).addParseAction(self._create_obj_prop_domain_axiom)
+
         # ObjectPropertyAxiom :=
         #   SubObjectPropertyOf | EquivalentObjectProperties |
         #   DisjointObjectProperties | InverseObjectProperties |
@@ -729,8 +741,8 @@ class FunctionalSyntaxParser(OWLParser):
             self.sub_object_property_of | \
             self.equivalent_object_properties | \
             self.disjoint_object_properties | \
-            self.inverse_object_properties  #| \
-            # self.object_property_domain | \
+            self.inverse_object_properties | \
+            self.object_property_domain #| \
             # self.object_property_range | \
             # self.functional_object_property | \
             # self.inverse_functional_object_property | \
@@ -848,6 +860,21 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLDisjointClassesAxiom(disjoint_classes)
         else:
             return OWLDisjointClassesAxiom(disjoint_classes, annotations)
+
+    @staticmethod
+    def _create_obj_prop_domain_axiom(parsed):
+        cls = parsed.pop(-1)
+        obj_prop = parsed.pop(-1)
+
+        if parsed:
+            annotations = {a for a in parsed}
+        else:
+            annotations = None
+
+        if annotations is not None:
+            return OWLObjectPropertyDomainAxiom(obj_prop, cls, annotations)
+        else:
+            return OWLObjectPropertyDomainAxiom(obj_prop, cls)
 
     @staticmethod
     def _create_inverse_obj_props_axiom(parsed):

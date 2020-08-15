@@ -163,3 +163,33 @@ class OWLInverseObjectPropertiesAxiom(OWLObjectPropertyAxiom):
         return tmp
 
 
+class OWLObjectPropertyDomainAxiom(OWLObjectPropertyAxiom):
+    _hash_idx = 223
+
+    def __init__(self, object_property, domain, annotations=None):
+        self.object_property = object_property
+        self.domain = domain
+        self.annotations = annotations
+
+    def __eq__(self, other):
+        if not isinstance(other, OWLObjectPropertyDomainAxiom):
+            return False
+        else:
+            is_equal = \
+                self.object_property == other.object_property and \
+                self.domain == other.domain
+
+            if self.annotations or other.annotations:
+                is_equal = is_equal and self.annotations == other.annotations
+
+            return is_equal
+
+    def __hash__(self):
+        tmp = self._hash_idx * hash(self.object_property) + hash(self.domain)
+
+        if self.annotations:
+            tmp += reduce(
+                lambda l, r: self._hash_idx * l + r,
+                map(lambda a: hash(a), self.annotations))
+
+        return tmp
