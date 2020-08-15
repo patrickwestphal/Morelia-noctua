@@ -12,5 +12,6 @@ setup(
     install_requires=[
         'rdflib==5.0.0',
         'pyparsing==2.4.7',
+        'requests==2.24.0',
     ]
 )
