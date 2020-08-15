@@ -7,7 +7,8 @@ from model import OWLOntology
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
 from model.axioms.owlobjectpropertyaxiom import \
-    OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom
+    OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
+    OWLDisjointObjectPropertiesAxiom
 from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
     OWLObjectUnionOf, OWLObjectComplementOf, OWLObjectOneOf, \
@@ -1571,3 +1572,91 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             equiv_obj_props_axiom_2,
             parser.equivalent_object_properties.parseString(
                 equiv_obj_props_axiom_str_6)[0])
+
+    def test_disjoint_object_properties_axiom(self):
+        disjoint_obj_props_axiom_str_1 = \
+            'DisjointObjectProperties(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_uri>) ' \
+            '<http://example.com#invObjProp1> ' \
+            'ObjectInverseOf(<http://example.com#objProp1>))'
+
+        disjoint_obj_props_axiom_str_2 = \
+            'DisjointObjectProperties(' \
+            'Annotation(ex:ann "some annotation"@en) ' \
+            'Annotation(ex:ann2 ex:some_uri) ' \
+            'ex:invObjProp1 ' \
+            'ObjectInverseOf(ex:objProp1))'
+
+        disjoint_obj_props_axiom_str_3 = \
+            'DisjointObjectProperties(' \
+            'Annotation(ann "some annotation"@en) ' \
+            'Annotation(ann2 some_uri) ' \
+            'invObjProp1 ' \
+            'ObjectInverseOf(objProp1))'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_uri'))}
+
+        disjoint_obj_props_axiom_1 = OWLDisjointObjectPropertiesAxiom({
+            OWLObjectProperty('http://example.com#invObjProp1'),
+            OWLObjectInverseOf(
+                OWLObjectProperty('http://example.com#objProp1'))}, annotations)
+
+        disjoint_obj_props_axiom_str_4 = \
+            'DisjointObjectProperties(' \
+            '<http://example.com#invObjProp1> ' \
+            '<http://example.com#objProp1>)'
+
+        disjoint_obj_props_axiom_str_5 = \
+            'DisjointObjectProperties(ex:invObjProp1 ex:objProp1)'
+
+        disjoint_obj_props_axiom_str_6 = \
+            'DisjointObjectProperties(invObjProp1 objProp1)'
+
+        disjoint_obj_props_axiom_2 = OWLDisjointObjectPropertiesAxiom({
+            OWLObjectProperty('http://example.com#invObjProp1'),
+            OWLObjectProperty('http://example.com#objProp1')})
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            disjoint_obj_props_axiom_1,
+            parser.disjoint_object_properties.parseString(
+                disjoint_obj_props_axiom_str_1)[0])
+
+        self.assertEqual(
+            disjoint_obj_props_axiom_1,
+            parser.disjoint_object_properties.parseString(
+                disjoint_obj_props_axiom_str_2)[0])
+
+        self.assertEqual(
+            disjoint_obj_props_axiom_1,
+            parser.disjoint_object_properties.parseString(
+                disjoint_obj_props_axiom_str_3)[0])
+
+        self.assertEqual(
+            disjoint_obj_props_axiom_2,
+            parser.disjoint_object_properties.parseString(
+                disjoint_obj_props_axiom_str_4)[0])
+
+        self.assertEqual(
+            disjoint_obj_props_axiom_2,
+            parser.disjoint_object_properties.parseString(
+                disjoint_obj_props_axiom_str_5)[0])
+
+        self.assertEqual(
+            disjoint_obj_props_axiom_2,
+            parser.disjoint_object_properties.parseString(
+                disjoint_obj_props_axiom_str_6)[0])
+
