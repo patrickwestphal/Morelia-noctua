@@ -941,7 +941,7 @@ class FunctionalSyntaxParser(OWLParser):
 
             if isinstance(part, OWLAnnotation):
                 annotations.add(part)
-            elif isinstance(part, OWLObjectProperty):
+            elif isinstance(part, OWLObjectPropertyExpression):
                 sub_prop = part
                 break
             else:
