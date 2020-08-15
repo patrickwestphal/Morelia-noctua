@@ -71,6 +71,11 @@ def translate_axiom(owl_axiom):
 
 
 class OWLLinkReasoner(OWLReasoner):
+    _prefixes = {
+        'owllink': 'http://www.owllink.org/owllink#',
+        'owl': 'http://www.w3.org/2002/07/owl#'
+    }
+
     def __init__(self, ontology, owllink_server_url):
         self.ontology = ontology
         self.server_url = owllink_server_url
@@ -111,6 +116,13 @@ class OWLLinkReasoner(OWLReasoner):
 
         return kb_uri
 
+    def _make_class_expression(self, node: Element):
+        if node.tag == '{http://www.w3.org/2002/07/owl#}Class':
+            return OWLClass(node.get('IRI'))
+        else:
+            raise NotImplementedError(f'Node type {node.tag} not supported, '
+                                      f'yet')
+
     def get_classes(self):
         request_element = self._init_request()
         get_all_classes = SubElement(request_element, 'GetAllClasses')
@@ -122,14 +134,34 @@ class OWLLinkReasoner(OWLReasoner):
         etree = fromstring(response.content)
 
         classes = set()
-        for class_node in etree.findall(
-                '*/owl:Class', {'owl': 'http://www.w3.org/2002/07/owl#'}):
-            classes.add(OWLClass(class_node.get('IRI')))
+        for class_node in etree.findall('*/owl:Class', self._prefixes):
+            classes.add(self._make_class_expression(class_node))
 
         return classes
 
     def get_subclasses(self, class_expression, direct=True):
-        raise NotImplementedError()
+        request_element = self._init_request()
+
+        get_subclasses_element = SubElement(request_element, 'GetSubClasses')
+        get_subclasses_element.set('direct', str(direct).lower())
+        get_subclasses_element.set('kb', self.kb_uri)
+
+        get_subclasses_element.append(
+            _translate_class_expression(class_expression))
+
+        response = requests.post(
+            self.server_url,
+            tostring(request_element))
+
+        etree = fromstring(response.content)
+        subclasses = set()
+        for synset_node in etree.findall(
+                '*/owllink:ClassSynset', self._prefixes):
+
+            for ce_node in synset_node.getchildren():
+                subclasses.add(self._make_class_expression(ce_node))
+
+        return subclasses
 
     def get_superclasses(self, class_expression):
         raise NotImplementedError()
