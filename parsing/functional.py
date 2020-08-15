@@ -12,7 +12,7 @@ from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
     OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom, \
     OWLNamedIndividualDeclarationAxiom
 from model.axioms.owlobjectpropertyaxiom import \
-    OWLSubObjectPropertyAxiomOfAxiom, OWLEquivalentObjectPropertiesAxiom
+    OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom
 from model.objects import HasIRI
 from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
@@ -863,9 +863,9 @@ class FunctionalSyntaxParser(OWLParser):
         super_prop = parsed.pop()
 
         if len(annotations) == 0:
-            return OWLSubObjectPropertyAxiomOfAxiom(sub_prop, super_prop)
+            return OWLSubObjectPropertyOfAxiom(sub_prop, super_prop)
         else:
-            return OWLSubObjectPropertyAxiomOfAxiom(
+            return OWLSubObjectPropertyOfAxiom(
                 sub_prop, super_prop, annotations)
 
     @staticmethod

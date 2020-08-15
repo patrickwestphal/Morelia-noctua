@@ -7,7 +7,7 @@ from model import OWLOntology
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
 from model.axioms.owlobjectpropertyaxiom import \
-    OWLSubObjectPropertyAxiomOfAxiom, OWLEquivalentObjectPropertiesAxiom
+    OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom
 from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
     OWLObjectUnionOf, OWLObjectComplementOf, OWLObjectOneOf, \
@@ -1428,7 +1428,7 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
                 OWLAnnotationProperty('http://example.com#ann2'),
                 URIRef('http://example.com#some_uri'))}
 
-        sub_obj_prop_axiom_1 = OWLSubObjectPropertyAxiomOfAxiom(
+        sub_obj_prop_axiom_1 = OWLSubObjectPropertyOfAxiom(
             OWLObjectProperty('http://example.com#subObjProp1'),
             OWLObjectProperty('http://example.com#objProp1'),
             annotations)
@@ -1444,7 +1444,7 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
         sub_obj_prop_axiom_str_6 = \
             'SubObjectPropertyOf(ObjectInverseOf(obj_prop) objProp1)'
 
-        sub_obj_prop_axiom_2 = OWLSubObjectPropertyAxiomOfAxiom(
+        sub_obj_prop_axiom_2 = OWLSubObjectPropertyOfAxiom(
             OWLObjectInverseOf(
                 OWLObjectProperty('http://example.com#obj_prop')),
             OWLObjectProperty('http://example.com#objProp1'))
