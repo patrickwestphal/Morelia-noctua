@@ -30,7 +30,7 @@ class OWLSubObjectPropertyOfAxiom(OWLObjectPropertyAxiom):
             is_equal = self.sub_property == other.sub_property \
                  and self.super_property == other.super_property
 
-            if self.annotations:
+            if self.annotations or other.annotations:
                 is_equal = is_equal and self.annotations == other.annotations
 
             return is_equal
@@ -79,7 +79,7 @@ class OWLEquivalentObjectPropertiesAxiom(
         else:
             is_equal = self.properties == other.properties
 
-            if self.annotations:
+            if self.annotations or other.annotations:
                 is_equal = is_equal and self.annotations == other.annotations
 
             return is_equal

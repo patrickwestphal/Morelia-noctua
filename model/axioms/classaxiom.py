@@ -122,7 +122,9 @@ class OWLDisjointUnionAxiom(OWLClassAxiom, HasOperands):
             lambda l, r: self._hash_idx*l+r,
             map(lambda o: hash(o), self.operands))
 
-        if self.operands is not None:
+        if self.annotations is not None:
             tmp += reduce(
                 lambda l, r: self._hash_idx*l+r,
                 map(lambda a: hash(a), self.annotations))
+
+        return tmp
