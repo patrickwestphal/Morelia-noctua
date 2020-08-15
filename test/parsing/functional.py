@@ -8,7 +8,7 @@ from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
 from model.axioms.owlobjectpropertyaxiom import \
     OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
-    OWLDisjointObjectPropertiesAxiom
+    OWLDisjointObjectPropertiesAxiom, OWLInverseObjectPropertiesAxiom
 from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
     OWLObjectUnionOf, OWLObjectComplementOf, OWLObjectOneOf, \
@@ -1659,4 +1659,92 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             disjoint_obj_props_axiom_2,
             parser.disjoint_object_properties.parseString(
                 disjoint_obj_props_axiom_str_6)[0])
+
+    def test_inverse_object_properties_axiom(self):
+        inverse_obj_props_axiom_str_1 = \
+            'InverseObjectProperties(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_uri>) ' \
+            '<http://example.com#invObjProp1> ' \
+            'ObjectInverseOf(<http://example.com#objProp1>))'
+
+        inverse_obj_props_axiom_str_2 = \
+            'InverseObjectProperties(' \
+            'Annotation(ex:ann "some annotation"@en) ' \
+            'Annotation(ex:ann2 ex:some_uri) ' \
+            'ex:invObjProp1 ' \
+            'ObjectInverseOf(ex:objProp1))'
+
+        inverse_obj_props_axiom_str_3 = \
+            'InverseObjectProperties(' \
+            'Annotation(ann "some annotation"@en) ' \
+            'Annotation(ann2 some_uri) ' \
+            'invObjProp1 ' \
+            'ObjectInverseOf(objProp1))'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_uri'))}
+
+        inverse_obj_props_axiom_1 = OWLInverseObjectPropertiesAxiom(
+            OWLObjectProperty('http://example.com#invObjProp1'),
+            OWLObjectInverseOf(
+                OWLObjectProperty('http://example.com#objProp1')),
+            annotations)
+
+        inverse_obj_props_axiom_str_4 = \
+            'InverseObjectProperties(' \
+            '<http://example.com#invObjProp1> ' \
+            '<http://example.com#objProp1>)'
+
+        inverse_obj_props_axiom_str_5 = \
+            'InverseObjectProperties(ex:invObjProp1 ex:objProp1)'
+
+        inverse_obj_props_axiom_str_6 = \
+            'InverseObjectProperties(invObjProp1 objProp1)'
+
+        inverse_obj_props_axiom_2 = OWLInverseObjectPropertiesAxiom(
+            OWLObjectProperty('http://example.com#invObjProp1'),
+            OWLObjectProperty('http://example.com#objProp1'))
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            inverse_obj_props_axiom_1,
+            parser.inverse_object_properties.parseString(
+                inverse_obj_props_axiom_str_1)[0])
+
+        self.assertEqual(
+            inverse_obj_props_axiom_1,
+            parser.inverse_object_properties.parseString(
+                inverse_obj_props_axiom_str_2)[0])
+
+        self.assertEqual(
+            inverse_obj_props_axiom_1,
+            parser.inverse_object_properties.parseString(
+                inverse_obj_props_axiom_str_3)[0])
+
+        self.assertEqual(
+            inverse_obj_props_axiom_2,
+            parser.inverse_object_properties.parseString(
+                inverse_obj_props_axiom_str_4)[0])
+
+        self.assertEqual(
+            inverse_obj_props_axiom_2,
+            parser.inverse_object_properties.parseString(
+                inverse_obj_props_axiom_str_5)[0])
+
+        self.assertEqual(
+            inverse_obj_props_axiom_2,
+            parser.inverse_object_properties.parseString(
+                inverse_obj_props_axiom_str_6)[0])
 

@@ -704,6 +704,19 @@ class FunctionalSyntaxParser(OWLParser):
             self.close_paren.suppress()
         ).addParseAction(self._create_disjoint_obj_props_axiom)
 
+        # InverseObjectProperties :=
+        #   'InverseObjectProperties' '(' axiomAnnotations
+        #                                 ObjectPropertyExpression
+        #                                 ObjectPropertyExpression ')'
+        self.inverse_object_properties = (
+            Literal('InverseObjectProperties').suppress() +
+            self.open_paren.suppress() +
+            self.axiom_annotations +
+            self.object_property_expression +
+            self.object_property_expression +
+            self.close_paren.suppress()
+        ).addParseAction(self._create_inverse_obj_props_axiom)
+
         # ObjectPropertyAxiom :=
         #   SubObjectPropertyOf | EquivalentObjectProperties |
         #   DisjointObjectProperties | InverseObjectProperties |
@@ -715,8 +728,8 @@ class FunctionalSyntaxParser(OWLParser):
         self.object_property_axiom = \
             self.sub_object_property_of | \
             self.equivalent_object_properties | \
-            self.disjoint_object_properties  #| \
-            # self.inverse_object_properties | \
+            self.disjoint_object_properties | \
+            self.inverse_object_properties  #| \
             # self.object_property_domain | \
             # self.object_property_range | \
             # self.functional_object_property | \
@@ -835,6 +848,21 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLDisjointClassesAxiom(disjoint_classes)
         else:
             return OWLDisjointClassesAxiom(disjoint_classes, annotations)
+
+    @staticmethod
+    def _create_inverse_obj_props_axiom(parsed):
+        second = parsed.pop(-1)
+        first = parsed.pop(-1)
+
+        if parsed:
+            annotations = {a for a in parsed}
+        else:
+            annotations = None
+
+        if annotations is None:
+            return OWLInverseObjectPropertiesAxiom(first, second)
+        else:
+            return OWLInverseObjectPropertiesAxiom(first, second, annotations)
 
     @staticmethod
     def _create_disjoint_obj_props_axiom(parsed):

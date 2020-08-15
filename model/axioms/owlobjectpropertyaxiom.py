@@ -95,3 +95,71 @@ class OWLEquivalentObjectPropertiesAxiom(
                 map(lambda a: hash(a), self.annotations))
 
         return tmp
+
+
+class OWLDisjointObjectPropertiesAxiom(
+        OWLObjectPropertyAxiom, HasObjectProperties):
+
+    _hash_idx = 199
+
+    def __init__(self, properties, annotations=None):
+        self.properties = self._init_properties(properties)
+        self.annotations = annotations
+
+    def __eq__(self, other):
+        if not isinstance(other, OWLDisjointObjectPropertiesAxiom):
+            return False
+        else:
+            is_equal = self.properties == other.properties
+
+            if self.annotations or other.annotations:
+                is_equal = is_equal and self.annotations == other.annotations
+
+            return is_equal
+
+    def __hash__(self):
+        tmp = reduce(
+            lambda l, r: self._hash_idx * l + r,
+            map(lambda p: hash(p), self.properties))
+
+        if self.annotations:
+            tmp += reduce(
+                lambda l, r: self._hash_idx * l + r,
+                map(lambda a: hash(a), self.annotations))
+
+        return tmp
+
+
+class OWLInverseObjectPropertiesAxiom(OWLObjectPropertyAxiom):
+
+    _hash_idx = 211
+
+    def __init__(self, first, second, annotations=None):
+        self.first = first
+        self.second = second
+        self.annotations = annotations
+
+    def __eq__(self, other):
+        if not isinstance(other, OWLInverseObjectPropertiesAxiom):
+            return False
+        else:
+            is_equal = self.first == other.first and self.second == other.second
+
+            if self.annotations or other.annotations:
+                is_equal = is_equal and self.annotations == other.annotations
+
+            return is_equal
+
+    def __hash__(self):
+        tmp = reduce(
+            lambda l, r: self._hash_idx * l + r,
+            map(lambda p: hash(p), [self.first, self.second]))
+
+        if self.annotations:
+            tmp += reduce(
+                lambda l, r: self._hash_idx * l + r,
+                map(lambda a: hash(a), self.annotations))
+
+        return tmp
+
+
