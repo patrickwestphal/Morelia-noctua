@@ -114,7 +114,10 @@ class FunctionalSyntaxParser(OWLParser):
             .addParseAction(self._concat_prefixes)
 
         self.abbreviated_iri = \
-            ~ (Literal('_') | Literal('Declaration')) + \
+            ~ (  # list still needs to be extended
+                    Literal('_') |
+                    Literal('Declaration') |
+                    Literal('ObjectSomeValuesFrom')) + \
             Combine(Optional(self.prefix_name) + self.pn_local)\
             .addParseAction(self._create_full_iri)
 
