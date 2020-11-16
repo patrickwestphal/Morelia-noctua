@@ -5,6 +5,7 @@ from rdflib import URIRef, BNode
 
 from model import OWLOntology
 from model.axioms import OWLAxiom
+from model.axioms.assertionaxiom import OWLClassAssertionAxiom
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
 from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
@@ -764,17 +765,41 @@ class FunctionalSyntaxParser(OWLParser):
             # self.asymmetric_object_property | \
             # self.transitive_object_property
 
+        # ClassAssertion :=
+        #   'ClassAssertion' '(' axiomAnnotations ClassExpression Individual ')'
+        self.class_assertion = (
+            Literal('ClassAssertion').suppress() +
+            self.open_paren.suppress() +
+            self.axiom_annotations +
+            self.class_expression +
+            self.individual +
+            self.close_paren.suppress()
+        ).addParseAction(self._create_class_assertion_axiom)
+
+        # Assertion :=
+        #   SameIndividual | DifferentIndividuals | ClassAssertion |
+        #   ObjectPropertyAssertion | NegativeObjectPropertyAssertion |
+        #   DataPropertyAssertion | NegativeDataPropertyAssertion
+        self.assertion = \
+            self.class_assertion  # | \
+            # self.same_individual | \
+            # self.different_individuals | \
+            # self.object_property_assertion | \
+            # self.negative_object_property_assertion | \
+            # self.data_property_assertion | \
+            # self.negative_data_property_assertion
+
         # Axiom := Declaration | ClassAxiom | ObjectPropertyAxiom |
         #   DataPropertyAxiom | DatatypeDefinition | HasKey | Assertion |
         #   AnnotationAxiom
         self.axiom = \
             self.declaration | \
             self.class_axiom | \
-            self.object_property_axiom #| \
+            self.object_property_axiom | \
+            self.assertion  #| \
             # self.data_property_axiom | \
             # self.datatype_definition | \
             # self.has_key | \
-            # self.assertion | \
             # self.annotation_axiom
 
         self.axioms = ZeroOrMore(self.axiom | self.comment | self.empty_line)
@@ -874,16 +899,24 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLDisjointClassesAxiom(disjoint_classes, annotations)
 
     @staticmethod
+    def _create_class_assertion_axiom(parsed):
+        individual = parsed.pop(-1)
+        class_expression = parsed.pop(-1)
+
+        if parsed:
+            annotations = {a for a in parsed}
+            return OWLClassAssertionAxiom(
+                individual, class_expression, annotations)
+        else:
+            return OWLClassAssertionAxiom(individual, class_expression)
+
+    @staticmethod
     def _create_obj_prop_range_axiom(parsed):
         cls = parsed.pop(-1)
         obj_prop = parsed.pop(-1)
 
         if parsed:
             annotations = {a for a in parsed}
-        else:
-            annotations = None
-
-        if annotations is not None:
             return OWLObjectPropertyRangeAxiom(obj_prop, cls, annotations)
         else:
             return OWLObjectPropertyRangeAxiom(obj_prop, cls)
@@ -895,10 +928,6 @@ class FunctionalSyntaxParser(OWLParser):
 
         if parsed:
             annotations = {a for a in parsed}
-        else:
-            annotations = None
-
-        if annotations is not None:
             return OWLObjectPropertyDomainAxiom(obj_prop, cls, annotations)
         else:
             return OWLObjectPropertyDomainAxiom(obj_prop, cls)
@@ -910,13 +939,9 @@ class FunctionalSyntaxParser(OWLParser):
 
         if parsed:
             annotations = {a for a in parsed}
-        else:
-            annotations = None
-
-        if annotations is None:
-            return OWLInverseObjectPropertiesAxiom(first, second)
-        else:
             return OWLInverseObjectPropertiesAxiom(first, second, annotations)
+        else:
+            return OWLInverseObjectPropertiesAxiom(first, second)
 
     @staticmethod
     def _create_disjoint_obj_props_axiom(parsed):

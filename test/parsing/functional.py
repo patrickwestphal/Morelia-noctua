@@ -4,6 +4,7 @@ from rdflib import URIRef, Literal, XSD, BNode
 
 import model
 from model import OWLOntology
+from model.axioms.assertionaxiom import OWLClassAssertionAxiom
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
 from model.axioms.owlobjectpropertyaxiom import \
@@ -1894,7 +1895,7 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             'ObjectSomeValuesFrom(ex:objProp2 ex:Cls1))'
 
         obj_prop_range_axiom_str_6 = \
-            'ObjectPropertyDomain(objProp1 ' \
+            'ObjectPropertyRange(objProp1 ' \
             'ObjectSomeValuesFrom(objProp2 Cls1))'
 
         obj_prop_range_axiom_2 = OWLObjectPropertyRangeAxiom(
@@ -1938,3 +1939,100 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             obj_prop_range_axiom_2,
             parser.object_property_range.parseString(
                 obj_prop_range_axiom_str_6)[0])
+
+    def test_class_assertion_axiom(self):
+        cls_assertion_axiom_str_1 = \
+            'ClassAssertion(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_uri>) ' \
+            'ObjectSomeValuesFrom(' \
+            '<http://example.com#objProp2> <http://example.com#Cls1>) ' \
+            '<http://example.com#indiv1>)'
+
+        cls_assertion_axiom_str_2 = \
+            'ClassAssertion(' \
+            'Annotation(ex:ann "some annotation"@en) ' \
+            'Annotation(ex:ann2 ex:some_uri) ' \
+            'ObjectSomeValuesFrom(ex:objProp2 ex:Cls1) ' \
+            'ex:indiv1)'
+
+        cls_assertion_axiom_str_3 = \
+            'ClassAssertion(' \
+            'Annotation(ann "some annotation"@en) ' \
+            'Annotation(ann2 some_uri) ' \
+            'ObjectSomeValuesFrom(objProp2 Cls1) ' \
+            'indiv1)'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_uri'))}
+
+        cls_assertion_axiom_1 = OWLClassAssertionAxiom(
+            OWLNamedIndividual('http://example.com#indiv1'),
+            OWLObjectSomeValuesFrom(
+                OWLObjectProperty('http://example.com#objProp2'),
+                OWLClass('http://example.com#Cls1')),
+            annotations)
+
+        cls_assertion_axiom_str_4 = \
+            'ClassAssertion(' \
+            'ObjectSomeValuesFrom(' \
+            '<http://example.com#objProp2> <http://example.com#Cls1>)' \
+            '<http://example.com#indiv1>)'
+
+        cls_assertion_axiom_str_5 = \
+            'ClassAssertion( ' \
+            'ObjectSomeValuesFrom(ex:objProp2 ex:Cls1) ' \
+            'ex:indiv1)'
+
+        cls_assertion_axiom_str_6 = \
+            'ClassAssertion( ' \
+            'ObjectSomeValuesFrom(objProp2 Cls1) ' \
+            'indiv1)'
+
+        cls_assertion_axiom_2 = OWLClassAssertionAxiom(
+            OWLNamedIndividual('http://example.com#indiv1'),
+            OWLObjectSomeValuesFrom(
+                OWLObjectProperty('http://example.com#objProp2'),
+                OWLClass('http://example.com#Cls1')))
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            cls_assertion_axiom_1,
+            parser.class_assertion.parseString(
+                cls_assertion_axiom_str_1)[0])
+
+        self.assertEqual(
+            cls_assertion_axiom_1,
+            parser.class_assertion.parseString(
+                cls_assertion_axiom_str_2)[0])
+
+        self.assertEqual(
+            cls_assertion_axiom_1,
+            parser.class_assertion.parseString(
+                cls_assertion_axiom_str_3)[0])
+
+        self.assertEqual(
+            cls_assertion_axiom_2,
+            parser.class_assertion.parseString(
+                cls_assertion_axiom_str_4)[0])
+
+        self.assertEqual(
+            cls_assertion_axiom_2,
+            parser.class_assertion.parseString(
+                cls_assertion_axiom_str_5)[0])
+
+        self.assertEqual(
+            cls_assertion_axiom_2,
+            parser.class_assertion.parseString(
+                cls_assertion_axiom_str_6)[0])
