@@ -5,7 +5,8 @@ from rdflib import URIRef, BNode
 
 from model import OWLOntology
 from model.axioms import OWLAxiom
-from model.axioms.assertionaxiom import OWLClassAssertionAxiom
+from model.axioms.assertionaxiom import OWLClassAssertionAxiom, \
+    OWLObjectPropertyAssertionAxiom
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
 from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
@@ -765,6 +766,19 @@ class FunctionalSyntaxParser(OWLParser):
             # self.asymmetric_object_property | \
             # self.transitive_object_property
 
+        # ObjectPropertyAssertion :=
+        #   'ObjectPropertyAssertion' '(' axiomAnnotations ObjectPropertyExpression
+        #                                 sourceIndividual targetIndividual ')'
+        self.object_property_assertion = (
+            Literal('ObjectPropertyAssertion').suppress() +
+            self.open_paren.suppress() +
+            self.axiom_annotations +
+            self.object_property_expression +
+            self.individual +
+            self.individual +
+            self.close_paren.suppress()
+        ).addParseAction(self._create_object_property_assertion_axiom)
+
         # ClassAssertion :=
         #   'ClassAssertion' '(' axiomAnnotations ClassExpression Individual ')'
         self.class_assertion = (
@@ -781,10 +795,10 @@ class FunctionalSyntaxParser(OWLParser):
         #   ObjectPropertyAssertion | NegativeObjectPropertyAssertion |
         #   DataPropertyAssertion | NegativeDataPropertyAssertion
         self.assertion = \
-            self.class_assertion  # | \
+            self.class_assertion | \
+            self.object_property_assertion  # | \
             # self.same_individual | \
             # self.different_individuals | \
-            # self.object_property_assertion | \
             # self.negative_object_property_assertion | \
             # self.data_property_assertion | \
             # self.negative_data_property_assertion
@@ -897,6 +911,20 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLDisjointClassesAxiom(disjoint_classes)
         else:
             return OWLDisjointClassesAxiom(disjoint_classes, annotations)
+
+    @staticmethod
+    def _create_object_property_assertion_axiom(parsed):
+        object_individual = parsed.pop(-1)
+        subject_individual = parsed.pop(-1)
+        obj_property = parsed.pop(-1)
+
+        if parsed:
+            annotations = {a for a in parsed}
+            return OWLObjectPropertyAssertionAxiom(
+                subject_individual, obj_property, object_individual, annotations)
+        else:
+            return OWLObjectPropertyAssertionAxiom(
+                subject_individual, obj_property, object_individual)
 
     @staticmethod
     def _create_class_assertion_axiom(parsed):

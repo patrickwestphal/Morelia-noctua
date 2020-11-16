@@ -4,7 +4,8 @@ from rdflib import URIRef, Literal, XSD, BNode
 
 import model
 from model import OWLOntology
-from model.axioms.assertionaxiom import OWLClassAssertionAxiom
+from model.axioms.assertionaxiom import OWLClassAssertionAxiom, \
+    OWLObjectPropertyAssertionAxiom
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
 from model.axioms.owlobjectpropertyaxiom import \
@@ -2036,3 +2037,97 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             cls_assertion_axiom_2,
             parser.class_assertion.parseString(
                 cls_assertion_axiom_str_6)[0])
+
+    def test_object_property_assertion_axiom(self):
+        obj_property_assertion_axiom_str_1 = \
+            'ObjectPropertyAssertion(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_uri>) ' \
+            '<http://example.com#objProp1> ' \
+            '<http://example.com#indiv1> ' \
+            '<http://example.com#indiv2>)'
+
+        obj_property_assertion_axiom_str_2 = \
+            'ObjectPropertyAssertion(' \
+            'Annotation(ex:ann "some annotation"@en) ' \
+            'Annotation(ex:ann2 ex:some_uri) ' \
+            'ex:objProp1 ' \
+            'ex:indiv1 ' \
+            'ex:indiv2)'
+
+        obj_property_assertion_axiom_str_3 = \
+            'ObjectPropertyAssertion(' \
+            'Annotation(ann "some annotation"@en) ' \
+            'Annotation(ann2 some_uri) ' \
+            'objProp1 ' \
+            'indiv1 ' \
+            'indiv2)'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_uri'))}
+
+        obj_property_assertion_axiom_1 = OWLObjectPropertyAssertionAxiom(
+            OWLNamedIndividual('http://example.com#indiv1'),
+            OWLObjectProperty('http://example.com#objProp1'),
+            OWLNamedIndividual('http://example.com#indiv2'),
+            annotations)
+
+        obj_property_assertion_axiom_str_4 = \
+            'ObjectPropertyAssertion(' \
+            '<http://example.com#objProp1> ' \
+            '<http://example.com#indiv1> ' \
+            '<http://example.com#indiv2>)'
+
+        obj_property_assertion_axiom_str_5 = \
+            'ObjectPropertyAssertion(ex:objProp1 ex:indiv1 ex:indiv2)'
+
+        obj_property_assertion_axiom_str_6 = \
+            'ObjectPropertyAssertion(objProp1 indiv1 indiv2)'
+
+        obj_property_assertion_axiom_2 = OWLObjectPropertyAssertionAxiom(
+            OWLNamedIndividual('http://example.com#indiv1'),
+            OWLObjectProperty('http://example.com#objProp1'),
+            OWLNamedIndividual('http://example.com#indiv2'))
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            obj_property_assertion_axiom_1,
+            parser.object_property_assertion.parseString(
+                obj_property_assertion_axiom_str_1)[0])
+
+        self.assertEqual(
+            obj_property_assertion_axiom_1,
+            parser.object_property_assertion.parseString(
+                obj_property_assertion_axiom_str_2)[0])
+
+        self.assertEqual(
+            obj_property_assertion_axiom_1,
+            parser.object_property_assertion.parseString(
+                obj_property_assertion_axiom_str_3)[0])
+
+        self.assertEqual(
+            obj_property_assertion_axiom_2,
+            parser.object_property_assertion.parseString(
+                obj_property_assertion_axiom_str_4)[0])
+
+        self.assertEqual(
+            obj_property_assertion_axiom_2,
+            parser.object_property_assertion.parseString(
+                obj_property_assertion_axiom_str_5)[0])
+
+        self.assertEqual(
+            obj_property_assertion_axiom_2,
+            parser.object_property_assertion.parseString(
+                obj_property_assertion_axiom_str_6)[0])
+
