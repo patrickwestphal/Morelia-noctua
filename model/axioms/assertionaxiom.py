@@ -1,9 +1,11 @@
 from functools import reduce
 
+from rdflib import Literal
+
 from model.axioms import OWLAxiom
 from model.objects.classexpression import OWLClassExpression
 from model.objects.individual import OWLIndividual
-from model.objects.property import OWLObjectPropertyExpression
+from model.objects.property import OWLDataProperty, OWLObjectPropertyExpression
 
 
 class OWLClassAssertionAxiom(OWLAxiom):
@@ -86,3 +88,46 @@ class OWLObjectPropertyAssertionAxiom(OWLAxiom):
 
         return tmp
 
+
+class OWLDataPropertyAssertionAxiom(OWLAxiom):
+    _hash_idx = 239
+
+    def __init__(
+            self,
+            subject_individual: OWLIndividual,
+            owl_property: OWLDataProperty,
+            value: Literal,
+            annotations=None):
+
+        self.subject_individual = subject_individual
+        self.owl_property = owl_property
+        self.value = value
+        self.annotations = annotations
+
+    def __eq__(self, other):
+        if not isinstance(other, OWLDataPropertyAssertionAxiom):
+            return False
+        else:
+            is_equal = \
+                self.subject_individual == other.subject_individual and \
+                self.owl_property == other.owl_property and \
+                self.value == other.value
+
+            if self.annotations or other.annotations:
+                is_equal = is_equal and self.annotations == other.annotations
+
+            return is_equal
+
+    def __hash__(self):
+        tmp = \
+            self._hash_idx * hash(self.subject_individual) + \
+            hash(self.owl_property)
+
+        tmp += self._hash_idx * hash(self.value)
+
+        if self.annotations:
+            tmp += reduce(
+                lambda l, r: self._hash_idx * l + r,
+                map(lambda a: hash(a), self.annotations))
+
+        return tmp

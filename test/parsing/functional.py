@@ -5,7 +5,7 @@ from rdflib import URIRef, Literal, XSD, BNode
 import model
 from model import OWLOntology
 from model.axioms.assertionaxiom import OWLClassAssertionAxiom, \
-    OWLObjectPropertyAssertionAxiom
+    OWLObjectPropertyAssertionAxiom, OWLDataPropertyAssertionAxiom
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
 from model.axioms.owlobjectpropertyaxiom import \
@@ -2131,3 +2131,95 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             parser.object_property_assertion.parseString(
                 obj_property_assertion_axiom_str_6)[0])
 
+    def test_data_property_assertion_axiom(self):
+        data_property_assertion_axiom_str_1 = \
+            'DataPropertyAssertion(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_uri>) ' \
+            '<http://example.com#dataProp1> ' \
+            '<http://example.com#indiv1> ' \
+            '"42"^^<http://www.w3.org/2001/XMLSchema#int>)'
+
+        data_property_assertion_axiom_str_2 = \
+            'DataPropertyAssertion(' \
+            'Annotation(ex:ann "some annotation"@en) ' \
+            'Annotation(ex:ann2 ex:some_uri) ' \
+            'ex:dataProp1 ' \
+            'ex:indiv1 ' \
+            '"42"^^xsd:int)'
+
+        data_property_assertion_axiom_str_3 = \
+            'DataPropertyAssertion(' \
+            'Annotation(ann "some annotation"@en) ' \
+            'Annotation(ann2 some_uri) ' \
+            'dataProp1 ' \
+            'indiv1 ' \
+            '"42"^^xsd:int)'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_uri'))}
+
+        data_property_assertion_axiom_1 = OWLDataPropertyAssertionAxiom(
+            OWLNamedIndividual('http://example.com#indiv1'),
+            OWLDataProperty('http://example.com#dataProp1'),
+            Literal("42", None, XSD.int),
+            annotations)
+
+        data_property_assertion_axiom_str_4 = \
+            'DataPropertyAssertion(' \
+            '<http://example.com#dataProp1> ' \
+            '<http://example.com#indiv1> ' \
+            '"42"^^<http://www.w3.org/2001/XMLSchema#int>)'
+
+        data_property_assertion_axiom_str_5 = \
+            'DataPropertyAssertion(ex:dataProp1 ex:indiv1 "42"^^xsd:int)'
+
+        data_property_assertion_axiom_str_6 = \
+            'DataPropertyAssertion(dataProp1 indiv1 "42"^^xsd:int)'
+
+        data_property_assertion_axiom_2 = OWLDataPropertyAssertionAxiom(
+            OWLNamedIndividual('http://example.com#indiv1'),
+            OWLDataProperty('http://example.com#dataProp1'),
+            Literal("42", None, XSD.int))
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            data_property_assertion_axiom_1,
+            parser.data_property_assertion.parseString(
+                data_property_assertion_axiom_str_1)[0])
+
+        self.assertEqual(
+            data_property_assertion_axiom_1,
+            parser.data_property_assertion.parseString(
+                data_property_assertion_axiom_str_2)[0])
+
+        self.assertEqual(
+            data_property_assertion_axiom_1,
+            parser.data_property_assertion.parseString(
+                data_property_assertion_axiom_str_3)[0])
+
+        self.assertEqual(
+            data_property_assertion_axiom_2,
+            parser.data_property_assertion.parseString(
+                data_property_assertion_axiom_str_4)[0])
+
+        self.assertEqual(
+            data_property_assertion_axiom_2,
+            parser.data_property_assertion.parseString(
+                data_property_assertion_axiom_str_5)[0])
+
+        self.assertEqual(
+            data_property_assertion_axiom_2,
+            parser.data_property_assertion.parseString(
+                data_property_assertion_axiom_str_6)[0])
