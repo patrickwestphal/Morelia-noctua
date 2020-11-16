@@ -14,7 +14,7 @@ from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
 from model.axioms.owlobjectpropertyaxiom import \
     OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
     OWLDisjointObjectPropertiesAxiom, OWLInverseObjectPropertiesAxiom, \
-    OWLObjectPropertyDomainAxiom
+    OWLObjectPropertyDomainAxiom, OWLObjectPropertyRangeAxiom
 from model.objects import HasIRI
 from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
@@ -729,6 +729,18 @@ class FunctionalSyntaxParser(OWLParser):
             self.close_paren.suppress()
         ).addParseAction(self._create_obj_prop_domain_axiom)
 
+        # ObjectPropertyRange :=
+        #   'ObjectPropertyRange' '(' axiomAnnotations ObjectPropertyExpression
+        #                             ClassExpression ')'
+        self.object_property_range = (
+            Literal('ObjectPropertyRange').suppress() +
+            self.open_paren.suppress() +
+            self.axiom_annotations +
+            self.object_property_expression +
+            self.class_expression +
+            self.close_paren.suppress()
+        ).addParseAction(self._create_obj_prop_range_axiom)
+
         # ObjectPropertyAxiom :=
         #   SubObjectPropertyOf | EquivalentObjectProperties |
         #   DisjointObjectProperties | InverseObjectProperties |
@@ -742,8 +754,8 @@ class FunctionalSyntaxParser(OWLParser):
             self.equivalent_object_properties | \
             self.disjoint_object_properties | \
             self.inverse_object_properties | \
-            self.object_property_domain #| \
-            # self.object_property_range | \
+            self.object_property_domain | \
+            self.object_property_range  # | \
             # self.functional_object_property | \
             # self.inverse_functional_object_property | \
             # self.reflexive_object_property | \
@@ -860,6 +872,21 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLDisjointClassesAxiom(disjoint_classes)
         else:
             return OWLDisjointClassesAxiom(disjoint_classes, annotations)
+
+    @staticmethod
+    def _create_obj_prop_range_axiom(parsed):
+        cls = parsed.pop(-1)
+        obj_prop = parsed.pop(-1)
+
+        if parsed:
+            annotations = {a for a in parsed}
+        else:
+            annotations = None
+
+        if annotations is not None:
+            return OWLObjectPropertyRangeAxiom(obj_prop, cls, annotations)
+        else:
+            return OWLObjectPropertyRangeAxiom(obj_prop, cls)
 
     @staticmethod
     def _create_obj_prop_domain_axiom(parsed):

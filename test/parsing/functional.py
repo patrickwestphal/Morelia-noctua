@@ -9,7 +9,7 @@ from model.axioms.classaxiom import OWLSubClassOfAxiom, \
 from model.axioms.owlobjectpropertyaxiom import \
     OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
     OWLDisjointObjectPropertiesAxiom, OWLInverseObjectPropertiesAxiom, \
-    OWLObjectPropertyDomainAxiom
+    OWLObjectPropertyDomainAxiom, OWLObjectPropertyRangeAxiom
 from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
     OWLObjectUnionOf, OWLObjectComplementOf, OWLObjectOneOf, \
@@ -1843,3 +1843,98 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             obj_prop_domain_axiom_2,
             parser.object_property_domain.parseString(
                 obj_prop_domain_axiom_str_6)[0])
+
+    def test_object_property_range_axiom(self):
+        obj_prop_range_axiom_str_1 = \
+            'ObjectPropertyRange(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_uri>) ' \
+            '<http://example.com#objProp1> ' \
+            'ObjectSomeValuesFrom(' \
+            '<http://example.com#objProp2> <http://example.com#Cls1>))'
+
+        obj_prop_range_axiom_str_2 = \
+            'ObjectPropertyRange(' \
+            'Annotation(ex:ann "some annotation"@en) ' \
+            'Annotation(ex:ann2 ex:some_uri) ' \
+            'ex:objProp1 ' \
+            'ObjectSomeValuesFrom(ex:objProp2 ex:Cls1))'
+
+        obj_prop_range_axiom_str_3 = \
+            'ObjectPropertyRange(' \
+            'Annotation(ann "some annotation"@en) ' \
+            'Annotation(ann2 some_uri) ' \
+            'objProp1 ' \
+            'ObjectSomeValuesFrom(objProp2 Cls1))'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_uri'))}
+
+        obj_prop_range_axiom_1 = OWLObjectPropertyRangeAxiom(
+            OWLObjectProperty('http://example.com#objProp1'),
+            OWLObjectSomeValuesFrom(
+                OWLObjectProperty('http://example.com#objProp2'),
+                OWLClass('http://example.com#Cls1')),
+            annotations)
+
+        obj_prop_range_axiom_str_4 = \
+            'ObjectPropertyRange(' \
+            '<http://example.com#objProp1> ' \
+            'ObjectSomeValuesFrom(' \
+            '<http://example.com#objProp2> <http://example.com#Cls1>))'
+
+        obj_prop_range_axiom_str_5 = \
+            'ObjectPropertyRange(ex:objProp1 ' \
+            'ObjectSomeValuesFrom(ex:objProp2 ex:Cls1))'
+
+        obj_prop_range_axiom_str_6 = \
+            'ObjectPropertyDomain(objProp1 ' \
+            'ObjectSomeValuesFrom(objProp2 Cls1))'
+
+        obj_prop_range_axiom_2 = OWLObjectPropertyRangeAxiom(
+            OWLObjectProperty('http://example.com#objProp1'),
+            OWLObjectSomeValuesFrom(
+                OWLObjectProperty('http://example.com#objProp2'),
+                OWLClass('http://example.com#Cls1')))
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            obj_prop_range_axiom_1,
+            parser.object_property_range.parseString(
+                obj_prop_range_axiom_str_1)[0])
+
+        self.assertEqual(
+            obj_prop_range_axiom_1,
+            parser.object_property_range.parseString(
+                obj_prop_range_axiom_str_2)[0])
+
+        self.assertEqual(
+            obj_prop_range_axiom_1,
+            parser.object_property_range.parseString(
+                obj_prop_range_axiom_str_3)[0])
+
+        self.assertEqual(
+            obj_prop_range_axiom_2,
+            parser.object_property_range.parseString(
+                obj_prop_range_axiom_str_4)[0])
+
+        self.assertEqual(
+            obj_prop_range_axiom_2,
+            parser.object_property_range.parseString(
+                obj_prop_range_axiom_str_5)[0])
+
+        self.assertEqual(
+            obj_prop_range_axiom_2,
+            parser.object_property_range.parseString(
+                obj_prop_range_axiom_str_6)[0])

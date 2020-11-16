@@ -193,3 +193,35 @@ class OWLObjectPropertyDomainAxiom(OWLObjectPropertyAxiom):
                 map(lambda a: hash(a), self.annotations))
 
         return tmp
+
+
+class OWLObjectPropertyRangeAxiom(OWLObjectPropertyAxiom):
+    _hash_idx = 227
+
+    def __init__(self, object_property, range, annotations=None):
+        self.object_property = object_property
+        self.range = range
+        self.annotations = annotations
+
+    def __eq__(self, other):
+        if not isinstance(other, OWLObjectPropertyRangeAxiom):
+            return False
+        else:
+            is_equal = \
+                self.object_property == other.object_property and \
+                self.range == other.range
+
+            if self.annotations or other.annotations:
+                is_equal = is_equal and self.annotations == other.annotations
+
+            return is_equal
+
+    def __hash__(self):
+        tmp = self._hash_idx * hash(self.object_property) + hash(self.range)
+
+        if self.annotations:
+            tmp += reduce(
+                lambda l, r: self._hash_idx * l + r,
+                map(lambda a: hash(a), self.annotations))
+
+        return tmp
