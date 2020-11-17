@@ -4,9 +4,17 @@ from xml.etree.ElementTree import Element, SubElement, tostring, fromstring
 
 import requests
 
+from model.axioms.assertionaxiom import OWLObjectPropertyAssertionAxiom, \
+    OWLClassAssertionAxiom, OWLDataPropertyAssertionAxiom
 from model.axioms.classaxiom import OWLSubClassOfAxiom
-from model.axioms.declarationaxiom import OWLClassDeclarationAxiom
-from model.objects.classexpression import OWLClass, OWLClassExpression
+from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
+    OWLNamedIndividualDeclarationAxiom, OWLObjectPropertyDeclarationAxiom, \
+    OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom
+from model.axioms.owlobjectpropertyaxiom import OWLObjectPropertyRangeAxiom, \
+    OWLObjectPropertyDomainAxiom
+from model.objects.classexpression import OWLClass, OWLClassExpression, \
+    OWLObjectSomeValuesFrom
+from parsing.functional import FunctionalSyntaxParser
 from reasoning import OWLReasoner
 
 
@@ -17,9 +25,21 @@ def _translate_cls(cls: OWLClass):
     return cls_element
 
 
+def _translate_obj_some_values_from(ce: OWLObjectSomeValuesFrom):
+    ex_restriction_element = Element('owl:ObjectSomeValuesFrom')
+    role_element = SubElement(ex_restriction_element, 'owl:ObjectProperty')
+    role_element.set('IRI', str(ce.property.iri))
+    filler_element = _translate_class_expression(ce.filler)
+    ex_restriction_element.append(filler_element)
+
+    return ex_restriction_element
+
+
 def _translate_class_expression(ce: OWLClassExpression):
     if isinstance(ce, OWLClass):
         return _translate_cls(ce)
+    elif isinstance(ce, OWLObjectSomeValuesFrom):
+        return _translate_obj_some_values_from(ce)
     else:
         raise NotImplementedError('Complex class expressions not supported, '
                                   'yet')
@@ -55,10 +75,136 @@ def _translate_owl_subclass_of_axiom(axiom: OWLSubClassOfAxiom):
     return axiom_element
 
 
+def _translate_owl_named_individual_declaration_axiom(
+        axiom: OWLNamedIndividualDeclarationAxiom):
+    # e.g.
+    # <owl:NamedIndividual abbreviatedIRI="family:Mary"/>
+
+    axiom_element = Element('owl:NamedIndividual')
+    axiom_element.set('IRI', str(axiom.individual.iri))
+
+    return axiom_element
+
+
+def _translate_owl_obj_property_assertion_axiom(
+        axiom: OWLObjectPropertyAssertionAxiom):
+
+    axiom_element = Element('owl:ObjectPropertyAssertion')
+    obj_prop_element = SubElement(axiom_element, 'owl:ObjectProperty')
+    obj_prop_element.set('IRI', str(axiom.owl_property.iri))
+
+    subj_individual_element = SubElement(axiom_element, 'owl:NamedIndividual')
+    subj_individual_element.set('IRI', str(axiom.subject_individual.iri))
+
+    obj_individual_element = SubElement(axiom_element, 'owl:NamedIndividual')
+    obj_individual_element.set('IRI', str(axiom.object_individual.iri))
+
+    return axiom_element
+
+
+def _translate_owl_data_property_assertion_axiom(
+        axiom: OWLDataPropertyAssertionAxiom):
+
+    axiom_element = Element('owl:DataPropertyAssertion')
+    obj_prop_element = SubElement(axiom_element, 'owl:DataProperty')
+    obj_prop_element.set('IRI', str(axiom.owl_property.iri))
+
+    subj_individual_element = SubElement(axiom_element, 'owl:NamedIndividual')
+    subj_individual_element.set('IRI', str(axiom.subject_individual.iri))
+
+    value_literal_element = SubElement(axiom_element, 'owl:Literal')
+    value_literal_element.text = str(axiom.value)
+    if axiom.value.datatype:
+        value_literal_element.set('datatype', axiom.value.datatype)
+
+    return axiom_element
+
+
+def _translate_owl_class_assertion_axiom(axiom: OWLClassAssertionAxiom):
+    axiom_element = Element('owl:ClassAssertion')
+    axiom_element.append(_translate_class_expression(axiom.class_expression))
+
+    individual_element = SubElement(axiom_element, 'owl:NamedIndividual')
+    # FIXME: Will cause an error if individual not named
+    individual_element.set('IRI', str(axiom.individual.iri))
+
+    return axiom_element
+
+
+def _translate_owl_object_property_declaration_axiom(
+        axiom: OWLObjectPropertyDeclarationAxiom):
+
+    declaration_element = Element('owl:Declaration')
+    obj_prop_element = SubElement(declaration_element, 'owl:ObjectProperty')
+    obj_prop_element.set('IRI', str(axiom.obj_property.iri))
+
+    return declaration_element
+
+
+def _translate_owl_data_property_declaration_axiom(
+        axiom: OWLDataPropertyDeclarationAxiom):
+    declaration_element = Element('owl:Declaration')
+    data_prop_element = SubElement(declaration_element, 'owl:DataProperty')
+    data_prop_element.set('IRI', str(axiom.data_property.iri))
+
+    return declaration_element
+
+
+def _translate_obj_property_range_axiom(axiom: OWLObjectPropertyRangeAxiom):
+    obj_prop_range_element = Element('owl:ObjectPropertyRange')
+    obj_prop_element = SubElement(obj_prop_range_element, 'owl:ObjectProperty')
+    obj_prop_element.set('IRI', str(axiom.object_property.iri))
+
+    range_element = _translate_class_expression(axiom.range_ce)
+    obj_prop_range_element.append(range_element)
+
+    return obj_prop_range_element
+
+
+def _translate_obj_property_domain_axiom(axiom: OWLObjectPropertyDomainAxiom):
+    obj_prop_domain_element = Element('owl:ObjectPropertyDomain')
+    obj_prop_element = SubElement(obj_prop_domain_element, 'owl:ObjectProperty')
+    obj_prop_element.set('IRI', str(axiom.object_property.iri))
+
+    domain_element = _translate_class_expression(axiom.domain)
+    obj_prop_domain_element.append(domain_element)
+
+    return obj_prop_domain_element
+
+
+def _translate_owl_annotation_property_declaration(
+        axiom: OWLAnnotationPropertyDeclarationAxiom):
+
+    declaration_element = Element('owl:Declaration')
+
+    ann_prop_element = SubElement(declaration_element, 'owl:AnnotationProperty')
+    ann_prop_element.set('IRI', str(axiom.annotation_property.iri))
+
+    return declaration_element
+
+
 def translate_axiom(owl_axiom):
     translators = {
         OWLClassDeclarationAxiom: _translate_owl_class_declaration_axiom,
-        OWLSubClassOfAxiom: _translate_owl_subclass_of_axiom
+        OWLSubClassOfAxiom: _translate_owl_subclass_of_axiom,
+        OWLNamedIndividualDeclarationAxiom:
+            _translate_owl_named_individual_declaration_axiom,
+        OWLObjectPropertyAssertionAxiom:
+            _translate_owl_obj_property_assertion_axiom,
+        OWLDataPropertyAssertionAxiom:
+            _translate_owl_data_property_assertion_axiom,
+        OWLClassAssertionAxiom:
+            _translate_owl_class_assertion_axiom,
+        OWLObjectPropertyDeclarationAxiom:
+            _translate_owl_object_property_declaration_axiom,
+        OWLDataPropertyDeclarationAxiom:
+            _translate_owl_data_property_declaration_axiom,
+        OWLObjectPropertyRangeAxiom:
+            _translate_obj_property_range_axiom,
+        OWLObjectPropertyDomainAxiom:
+            _translate_obj_property_domain_axiom,
+        OWLAnnotationPropertyDeclarationAxiom:
+            _translate_owl_annotation_property_declaration,
     }
 
     translator = translators.get(type(owl_axiom))
