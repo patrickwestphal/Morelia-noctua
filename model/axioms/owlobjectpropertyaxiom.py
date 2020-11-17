@@ -3,6 +3,7 @@ from functools import reduce
 from rdflib import URIRef
 
 from model.axioms import OWLAxiom
+from model.objects.classexpression import OWLClassExpression
 from model.objects.property import OWLObjectPropertyExpression, \
     OWLObjectProperty
 
@@ -131,7 +132,6 @@ class OWLDisjointObjectPropertiesAxiom(
 
 
 class OWLInverseObjectPropertiesAxiom(OWLObjectPropertyAxiom):
-
     _hash_idx = 211
 
     def __init__(self, first, second, annotations=None):
@@ -166,7 +166,12 @@ class OWLInverseObjectPropertiesAxiom(OWLObjectPropertyAxiom):
 class OWLObjectPropertyDomainAxiom(OWLObjectPropertyAxiom):
     _hash_idx = 223
 
-    def __init__(self, object_property, domain, annotations=None):
+    def __init__(
+            self,
+            object_property: OWLObjectPropertyExpression,
+            domain: OWLClassExpression,
+            annotations=None):
+
         self.object_property = object_property
         self.domain = domain
         self.annotations = annotations
@@ -198,9 +203,14 @@ class OWLObjectPropertyDomainAxiom(OWLObjectPropertyAxiom):
 class OWLObjectPropertyRangeAxiom(OWLObjectPropertyAxiom):
     _hash_idx = 227
 
-    def __init__(self, object_property, range, annotations=None):
+    def __init__(
+            self,
+            object_property: OWLObjectPropertyExpression,
+            range_ce: OWLClassExpression,
+            annotations=None):
+
         self.object_property = object_property
-        self.range = range
+        self.range_ce = range_ce
         self.annotations = annotations
 
     def __eq__(self, other):
@@ -209,7 +219,7 @@ class OWLObjectPropertyRangeAxiom(OWLObjectPropertyAxiom):
         else:
             is_equal = \
                 self.object_property == other.object_property and \
-                self.range == other.range
+                self.range_ce == other.range_ce
 
             if self.annotations or other.annotations:
                 is_equal = is_equal and self.annotations == other.annotations
@@ -217,7 +227,7 @@ class OWLObjectPropertyRangeAxiom(OWLObjectPropertyAxiom):
             return is_equal
 
     def __hash__(self):
-        tmp = self._hash_idx * hash(self.object_property) + hash(self.range)
+        tmp = self._hash_idx * hash(self.object_property) + hash(self.range_ce)
 
         if self.annotations:
             tmp += reduce(
