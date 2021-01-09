@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import Set
+from typing import Set
 
 from rdflib import Literal
 

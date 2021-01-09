@@ -1,6 +1,6 @@
 import logging
 import uuid
-from collections import Set
+from typing import Set
 from xml.etree.ElementTree import Element, SubElement, tostring, fromstring
 
 import requests
