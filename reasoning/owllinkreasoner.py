@@ -1,9 +1,13 @@
 import logging
 import uuid
+from collections import Set
 from xml.etree.ElementTree import Element, SubElement, tostring, fromstring
 
 import requests
+from rdflib import Literal
 
+from model import OWLOntology
+from model.axioms import OWLAxiom
 from model.axioms.assertionaxiom import OWLObjectPropertyAssertionAxiom, \
     OWLClassAssertionAxiom, OWLDataPropertyAssertionAxiom
 from model.axioms.classaxiom import OWLSubClassOfAxiom
@@ -14,18 +18,22 @@ from model.axioms.owlobjectpropertyaxiom import OWLObjectPropertyRangeAxiom, \
     OWLObjectPropertyDomainAxiom
 from model.objects.classexpression import OWLClass, OWLClassExpression, \
     OWLObjectSomeValuesFrom
+from model.objects.datarange import OWLDatatype
+from model.objects.individual import OWLNamedIndividual, OWLIndividual
+from model.objects.property import OWLObjectProperty, OWLAnnotationProperty, \
+    OWLDataProperty, OWLObjectPropertyExpression
 from parsing.functional import FunctionalSyntaxParser
 from reasoning import OWLReasoner
 
 
-def _translate_cls(cls: OWLClass):
+def _translate_cls(cls: OWLClass) -> Element:
     cls_element = Element('owl:Class')
     cls_element.set('IRI', str(cls.iri))
 
     return cls_element
 
 
-def _translate_obj_some_values_from(ce: OWLObjectSomeValuesFrom):
+def _translate_obj_some_values_from(ce: OWLObjectSomeValuesFrom) -> Element:
     ex_restriction_element = Element('owl:ObjectSomeValuesFrom')
     role_element = SubElement(ex_restriction_element, 'owl:ObjectProperty')
     role_element.set('IRI', str(ce.property.iri))
@@ -35,7 +43,7 @@ def _translate_obj_some_values_from(ce: OWLObjectSomeValuesFrom):
     return ex_restriction_element
 
 
-def _translate_class_expression(ce: OWLClassExpression):
+def _translate_class_expression(ce: OWLClassExpression) -> Element:
     if isinstance(ce, OWLClass):
         return _translate_cls(ce)
     elif isinstance(ce, OWLObjectSomeValuesFrom):
@@ -45,14 +53,16 @@ def _translate_class_expression(ce: OWLClassExpression):
                                   'yet')
 
 
-def _translate_owl_class_declaration_axiom(axiom: OWLClassDeclarationAxiom):
+def _translate_owl_class_declaration_axiom(
+        axiom: OWLClassDeclarationAxiom) -> Element:
+
     axiom_element = Element('owl:Declaration')
     axiom_element.append(_translate_cls(axiom.cls))
 
     return axiom_element
 
 
-def _translate_owl_subclass_of_axiom(axiom: OWLSubClassOfAxiom):
+def _translate_owl_subclass_of_axiom(axiom: OWLSubClassOfAxiom) -> Element:
     axiom_element = Element('owl:SubClassOf')
 
     sub_cls_element = SubElement(axiom_element, 'owl:Class')
@@ -76,7 +86,7 @@ def _translate_owl_subclass_of_axiom(axiom: OWLSubClassOfAxiom):
 
 
 def _translate_owl_named_individual_declaration_axiom(
-        axiom: OWLNamedIndividualDeclarationAxiom):
+        axiom: OWLNamedIndividualDeclarationAxiom) -> Element:
     # e.g.
     # <owl:NamedIndividual abbreviatedIRI="family:Mary"/>
 
@@ -87,7 +97,7 @@ def _translate_owl_named_individual_declaration_axiom(
 
 
 def _translate_owl_obj_property_assertion_axiom(
-        axiom: OWLObjectPropertyAssertionAxiom):
+        axiom: OWLObjectPropertyAssertionAxiom) -> Element:
 
     axiom_element = Element('owl:ObjectPropertyAssertion')
     obj_prop_element = SubElement(axiom_element, 'owl:ObjectProperty')
@@ -103,7 +113,7 @@ def _translate_owl_obj_property_assertion_axiom(
 
 
 def _translate_owl_data_property_assertion_axiom(
-        axiom: OWLDataPropertyAssertionAxiom):
+        axiom: OWLDataPropertyAssertionAxiom) -> Element:
 
     axiom_element = Element('owl:DataPropertyAssertion')
     obj_prop_element = SubElement(axiom_element, 'owl:DataProperty')
@@ -120,7 +130,9 @@ def _translate_owl_data_property_assertion_axiom(
     return axiom_element
 
 
-def _translate_owl_class_assertion_axiom(axiom: OWLClassAssertionAxiom):
+def _translate_owl_class_assertion_axiom(
+        axiom: OWLClassAssertionAxiom) -> Element:
+
     axiom_element = Element('owl:ClassAssertion')
     axiom_element.append(_translate_class_expression(axiom.class_expression))
 
@@ -132,7 +144,7 @@ def _translate_owl_class_assertion_axiom(axiom: OWLClassAssertionAxiom):
 
 
 def _translate_owl_object_property_declaration_axiom(
-        axiom: OWLObjectPropertyDeclarationAxiom):
+        axiom: OWLObjectPropertyDeclarationAxiom) -> Element:
 
     declaration_element = Element('owl:Declaration')
     obj_prop_element = SubElement(declaration_element, 'owl:ObjectProperty')
@@ -142,7 +154,8 @@ def _translate_owl_object_property_declaration_axiom(
 
 
 def _translate_owl_data_property_declaration_axiom(
-        axiom: OWLDataPropertyDeclarationAxiom):
+        axiom: OWLDataPropertyDeclarationAxiom) -> Element:
+
     declaration_element = Element('owl:Declaration')
     data_prop_element = SubElement(declaration_element, 'owl:DataProperty')
     data_prop_element.set('IRI', str(axiom.data_property.iri))
@@ -150,7 +163,9 @@ def _translate_owl_data_property_declaration_axiom(
     return declaration_element
 
 
-def _translate_obj_property_range_axiom(axiom: OWLObjectPropertyRangeAxiom):
+def _translate_obj_property_range_axiom(
+        axiom: OWLObjectPropertyRangeAxiom) -> Element:
+
     obj_prop_range_element = Element('owl:ObjectPropertyRange')
     obj_prop_element = SubElement(obj_prop_range_element, 'owl:ObjectProperty')
     obj_prop_element.set('IRI', str(axiom.object_property.iri))
@@ -161,7 +176,9 @@ def _translate_obj_property_range_axiom(axiom: OWLObjectPropertyRangeAxiom):
     return obj_prop_range_element
 
 
-def _translate_obj_property_domain_axiom(axiom: OWLObjectPropertyDomainAxiom):
+def _translate_obj_property_domain_axiom(
+        axiom: OWLObjectPropertyDomainAxiom) -> Element:
+
     obj_prop_domain_element = Element('owl:ObjectPropertyDomain')
     obj_prop_element = SubElement(obj_prop_domain_element, 'owl:ObjectProperty')
     obj_prop_element.set('IRI', str(axiom.object_property.iri))
@@ -173,7 +190,7 @@ def _translate_obj_property_domain_axiom(axiom: OWLObjectPropertyDomainAxiom):
 
 
 def _translate_owl_annotation_property_declaration(
-        axiom: OWLAnnotationPropertyDeclarationAxiom):
+        axiom: OWLAnnotationPropertyDeclarationAxiom) -> Element:
 
     declaration_element = Element('owl:Declaration')
 
@@ -183,7 +200,7 @@ def _translate_owl_annotation_property_declaration(
     return declaration_element
 
 
-def translate_axiom(owl_axiom):
+def translate_axiom(owl_axiom) -> Element:
     translators = {
         OWLClassDeclarationAxiom: _translate_owl_class_declaration_axiom,
         OWLSubClassOfAxiom: _translate_owl_subclass_of_axiom,
@@ -222,7 +239,7 @@ class OWLLinkReasoner(OWLReasoner):
         'owl': 'http://www.w3.org/2002/07/owl#'
     }
 
-    def __init__(self, ontology, owllink_server_url):
+    def __init__(self, ontology: OWLOntology, owllink_server_url: str):
         self.ontology = ontology
         self.server_url = owllink_server_url
 
@@ -233,7 +250,7 @@ class OWLLinkReasoner(OWLReasoner):
         return 'http://example.com/' + str(uuid.uuid4())
 
     @staticmethod
-    def _init_request():
+    def _init_request() -> Element:
         request_element = Element('RequestMessage')
         request_element.set('xmlns', 'http://www.owllink.org/owllink#')
         request_element.set('xmlns:owl', 'http://www.w3.org/2002/07/owl#')
@@ -262,14 +279,58 @@ class OWLLinkReasoner(OWLReasoner):
 
         return kb_uri
 
-    def _make_class_expression(self, node: Element):
+    def _make_class_expression(self, node: Element) -> OWLClassExpression:
         if node.tag == '{http://www.w3.org/2002/07/owl#}Class':
             return OWLClass(node.get('IRI'))
         else:
             raise NotImplementedError(f'Node type {node.tag} not supported, '
                                       f'yet')
 
-    def get_classes(self):
+    def _make_individual(self, node: Element) -> OWLIndividual:
+        if node.tag == '{http://www.w3.org/2002/07/owl#}NamedIndividual':
+            return OWLNamedIndividual(node.get('IRI'))
+        else:
+            raise NotImplementedError(
+                f'Node type {node.tag} not supported, '
+                f'yet')
+
+    ###########################################################################
+    # Entailment Queries, KB Entities, and KB Status
+    #
+
+    def is_entailed(self, axiom: OWLAxiom) -> bool:
+        """
+        TODO: Implement and document
+
+        :param axiom:
+        :return:
+        """
+        raise NotImplementedError()
+
+    def is_entailed_direct(self, axiom: OWLAxiom) -> bool:
+        """
+        TODO: Implement and document
+
+        :param axiom:
+        :return:
+        """
+        raise NotImplementedError()
+
+    def get_all_object_properties(self) -> Set[OWLObjectProperty]:
+        """
+        TODO: Implement and document
+
+        :return:
+        """
+        raise NotImplementedError()
+
+    def get_all_individuals(self) -> Set[OWLNamedIndividual]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_all_classes(self) -> Set[OWLClass]:
         request_element = self._init_request()
         get_all_classes = SubElement(request_element, 'GetAllClasses')
         get_all_classes.set('kb', self.kb_uri)
@@ -281,11 +342,67 @@ class OWLLinkReasoner(OWLReasoner):
 
         classes = set()
         for class_node in etree.findall('*/owl:Class', self._prefixes):
-            classes.add(self._make_class_expression(class_node))
+            classes.add(OWLClass(class_node.get('IRI')))
 
         return classes
 
-    def get_subclasses(self, class_expression, direct=True):
+    def get_all_annotation_properties(self) -> Set[OWLAnnotationProperty]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_all_datatypes(self) -> Set[OWLDatatype]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_all_data_properties(self) -> Set[OWLDataProperty]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def is_kb_satisfiable(self) -> bool:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def is_kb_consistently_declared(self) -> bool:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_kb_language(self) -> str:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    ###########################################################################
+    # Queries about Classes and Properties
+    #
+
+    def is_class_satisfiable(self, ce: OWLClassExpression) -> bool:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_disjoint_classes(self, ce: OWLClassExpression) -> Set[OWLClass]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_sub_classes(
+            self,
+            ce: OWLClassExpression,
+            direct: bool = False) -> Set[OWLClassExpression]:
+
         request_element = self._init_request()
 
         get_subclasses_element = SubElement(request_element, 'GetSubClasses')
@@ -293,7 +410,7 @@ class OWLLinkReasoner(OWLReasoner):
         get_subclasses_element.set('kb', self.kb_uri)
 
         get_subclasses_element.append(
-            _translate_class_expression(class_expression))
+            _translate_class_expression(ce))
 
         response = requests.post(
             self.server_url,
@@ -309,7 +426,11 @@ class OWLLinkReasoner(OWLReasoner):
 
         return subclasses
 
-    def get_superclasses(self, class_expression, direct=False):
+    def get_super_classes(
+            self,
+            ce: OWLClassExpression,
+            direct: bool = False) -> Set[OWLClassExpression]:
+
         request_element = self._init_request()
 
         get_subclasses_element = SubElement(request_element, 'GetSuperClasses')
@@ -317,7 +438,7 @@ class OWLLinkReasoner(OWLReasoner):
         get_subclasses_element.set('kb', self.kb_uri)
 
         get_subclasses_element.append(
-            _translate_class_expression(class_expression))
+            _translate_class_expression(ce))
 
         response = requests.post(
             self.server_url,
@@ -332,4 +453,358 @@ class OWLLinkReasoner(OWLReasoner):
                 superclasses.add(self._make_class_expression(ce_node))
 
         return superclasses
+
+    def get_equivalent_classes(self, ce: OWLClassExpression) -> Set[OWLClass]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_sub_class_hierarchy(self) -> dict:
+        """
+        TODO: Think about return type, implement and document
+        """
+        raise NotImplementedError()
+
+    def is_object_property_satisfiable(
+            self, pe: OWLObjectPropertyExpression) -> bool:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_sub_object_properties(
+            self,
+            pe: OWLObjectPropertyExpression,
+            direct: bool = False) -> Set[OWLObjectPropertyExpression]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_super_object_properties(
+            self,
+            pe: OWLObjectPropertyExpression,
+            direct: bool = False) -> Set[OWLObjectPropertyExpression]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_equivalent_object_properties(
+            self,
+            pe: OWLObjectPropertyExpression) -> Set[OWLObjectPropertyExpression]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_disjoint_object_properties(
+            self,
+            pe: OWLObjectPropertyExpression) -> Set[OWLObjectPropertyExpression]:
+        """
+        TODO: Implement and document
+        """
+
+    def get_sub_object_property_hierarchy(self) -> dict:
+        """
+        TODO: Think about return type, implement and document
+        """
+        raise NotImplementedError()
+
+    def is_data_property_satisfiable(
+            self, data_property: OWLDataProperty) -> bool:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_sub_data_properties(
+            self,
+            data_property: OWLDataProperty,
+            direct: bool = False) -> Set[OWLDataProperty]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_super_data_properties(
+            self,
+            data_property: OWLDataProperty,
+            direct: bool = True) -> Set[OWLDataProperty]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_equivalent_data_properties(
+            self,
+            data_property: OWLDataProperty) -> Set[OWLDataProperty]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_disjoint_data_properties(
+            self,
+            data_property: OWLDataProperty) -> Set[OWLDataProperty]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_sub_data_property_hierarchy(self) -> dict:
+        """
+        TODO: Think about return type, implement and document
+        """
+        raise NotImplementedError()
+
+    ###########################################################################
+    # Queries about Individuals
+    #
+
+    def get_types(
+            self,
+            individual: OWLNamedIndividual,
+            direct: bool = False) -> Set[OWLClass]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_different_individuals(
+            self,
+            individual: OWLNamedIndividual) -> Set[OWLNamedIndividual]:
+        """
+        TODO: Implement and ducument
+        """
+        raise NotImplementedError()
+
+    def get_same_individuals(
+            self,
+            individual: OWLNamedIndividual) -> Set[OWLNamedIndividual]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_object_properties_of_source(
+            self,
+            source_individual: OWLIndividual) -> Set[OWLObjectPropertyExpression]:
+        """
+        TODO: Implement and document
+        FIXME: Types might be wrong (OWLObjectProperty instead of ...Expression, OWLNamedIndividual instead of OWLIndividual)
+        """
+        raise NotImplementedError()
+
+    def get_object_properties_between(
+            self,
+            source_individual: OWLIndividual,
+            target_individual: OWLIndividual) -> Set[OWLObjectPropertyExpression]:
+        """
+        TODO: Implement and document
+        FIXME: Types might be wrong (OWLObjectProperty instead of ...Expression, OWLNamedIndividual instead of OWLIndividual)
+        """
+        raise NotImplementedError()
+
+    def get_object_properties_of_target(
+            self,
+            target_individual: OWLIndividual) -> Set[OWLObjectPropertyExpression]:
+        """
+        TODO: Implement and document
+        FIXME: Types might be wrong (OWLObjectProperty instead of ...Expression, OWLNamedIndividual instead of OWLIndividual)
+        """
+        raise NotImplementedError()
+
+    def get_data_properties_of_source(
+            self, source_individual: OWLIndividual) -> Set[OWLDataProperty]:
+        """
+        TODO: Implement and document
+        FIXME: Types might be wrong (OWLNamedIndividual instead of OWLIndividual)
+        """
+        raise NotImplementedError()
+
+    def get_data_properties_between(
+            self,
+            source_individual: OWLIndividual,
+            target_literal: Literal) -> Set[OWLDataProperty]:
+        """
+        TODO: Implement and document
+        FIXME: Types might be wrong (OWLNamedIndividual instead of OWLIndividual)
+        """
+        raise NotImplementedError()
+
+    def get_data_properties_of_literal(
+            self, target_literal: Literal) -> Set[OWLDataProperty]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_instances(
+            self,
+            class_expression: OWLClassExpression,
+            direct: bool = False) -> Set[OWLIndividual]:
+
+        request_element = self._init_request()
+
+        get_instances_element = SubElement(request_element, 'GetInstances')
+        get_instances_element.set('kb', self.kb_uri)
+
+        get_instances_element.append(
+            _translate_class_expression(class_expression))
+
+        response = requests.post(self.server_url, tostring(request_element))
+
+        etree = fromstring(response.content)
+        instances = set()
+
+        for synset_node in etree.findall(
+                '*/owllink:IndividualSynset', self._prefixes):
+
+            for individual_node in synset_node.getchildren():
+                instances.add(self._make_individual(individual_node))
+
+        return instances
+
+    def get_object_property_targets(
+            self, pe: OWLObjectPropertyExpression) -> Set[OWLIndividual]:
+        """
+        TODO: Implement and document
+        FIXME: Types might be wrong (OWLObjectProperty instead of ...Expression, OWLNamedIndividual instead of OWLIndividual)
+        """
+        raise NotImplementedError()
+
+    def get_object_property_source(
+            self, pe: OWLObjectPropertyExpression) -> Set[OWLIndividual]:
+        """
+        TODO: Implement and document
+        FIXME: Types might be wrong (OWLObjectProperty instead of ...Expression, OWLNamedIndividual instead of OWLIndividual)
+        """
+        raise NotImplementedError()
+
+    def get_data_property_targets(self, data_property: OWLDataProperty) -> Set[Literal]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_data_property_sources(self, data_property: OWLDataProperty) -> Set[OWLIndividual]:
+        """
+        TODO: Implement and document
+        FIXME: Types might be wrong (OWLNamedIndividual instead of OWLIndividual)
+        """
+        raise NotImplementedError()
+
+    ###########################################################################
+    # Remaining OWLReasoner method implementations
+    #
+    def get_data_property_domains(
+            self,
+            data_property: OWLDataProperty,
+            direct: bool = False) -> Set[OWLClass]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_data_property_values(
+            self,
+            individual: OWLNamedIndividual,
+            data_property: OWLDataProperty) -> Set[Literal]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_inverse_object_properties(
+            self,
+            pe: OWLObjectPropertyExpression) -> Set[OWLObjectPropertyExpression]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_object_property_domains(
+            self,
+            pe: OWLObjectPropertyExpression,
+            direct: bool = False) -> Set[OWLClass]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_object_property_ranges(
+            self,
+            pe: OWLObjectPropertyExpression,
+            direct: bool = False) -> Set[OWLClass]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_object_property_values(
+            self, individual: OWLNamedIndividual,
+            pe: OWLObjectPropertyExpression) -> Set[OWLNamedIndividual]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_root_ontology(self) -> OWLOntology:
+        return self.ontology
+
+    def get_unsatisfiable_classes(self) -> Set[OWLClass]:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def is_consistent(self) -> bool:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def is_satisfiable(self, ce: OWLClassExpression) -> bool:
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_classes(self):
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_object_properties(self):
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_data_properties(self):
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_annotation_properties(self):
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_literals(self):
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
+
+    def get_datatypes(self):
+        """
+        TODO: Implement and document
+        """
+        raise NotImplementedError()
 
