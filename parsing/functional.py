@@ -475,7 +475,7 @@ class FunctionalSyntaxParser(OWLParser):
             Optional(self.class_expression) +
             self.close_paren.suppress()
         ).setName('obj_min_cardinality').addParseAction(
-            self._create_obj_min_cardinality_expression)
+            self._create_obj_min_cardinality)
 
         # ObjectMaxCardinality :=
         #   'ObjectMaxCardinality' '(' nonNegativeInteger
@@ -1207,7 +1207,7 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLObjectMaxCardinality(parsed[1], int(parsed[0]), parsed[2])
 
     @staticmethod
-    def _create_obj_min_cardinality_expression(parsed) -> OWLObjectMinCardinality:
+    def _create_obj_min_cardinality(parsed) -> OWLObjectMinCardinality:
         if len(parsed) == 2:  # no filler class given
             return OWLObjectMinCardinality(parsed[1], int(parsed[0]))
         else:
