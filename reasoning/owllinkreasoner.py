@@ -364,13 +364,36 @@ class OWLLinkReasoner(OWLReasoner):
     #
 
     def is_entailed(self, axiom: OWLAxiom) -> bool:
-        """
-        TODO: Implement and document
+        request_element = self._init_request()
 
-        :param axiom:
-        :return:
-        """
-        raise NotImplementedError()
+        is_entailed_element = SubElement(request_element, 'IsEntailed')
+        is_entailed_element.set('kb', self.kb_uri)
+
+        is_entailed_element.append(translate_axiom(axiom))
+
+        response = requests.post(
+            self.server_url,
+            tostring(request_element))
+
+        # Example response:
+        # <?xml version="1.0" encoding="utf-8"?>
+        # <!DOCTYPE ResponseMessage>
+        # <ResponseMessage
+        #     xmlns="http://www.owllink.org/owllink#"
+        #     xml:base="http://www.w3.org/2002/07/owl#"
+        #     xmlns:owl="http://www.w3.org/2002/07/owl#"
+        #     xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+        #
+        #     <BooleanResponse result="false"/>
+        # </ResponseMessage>
+        etree = fromstring(response.content)
+
+        response_elem = \
+            etree.find('.//{http://www.owllink.org/owllink#}BooleanResponse')
+
+        is_entailed = response_elem.attrib['result'].lower() == 'true'
+
+        return is_entailed
 
     def is_entailed_direct(self, axiom: OWLAxiom) -> bool:
         """
