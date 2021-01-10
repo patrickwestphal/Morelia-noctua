@@ -8,7 +8,8 @@ from model.axioms.assertionaxiom import OWLClassAssertionAxiom, \
     OWLObjectPropertyAssertionAxiom, OWLDataPropertyAssertionAxiom
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
-from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom
+from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom, \
+    OWLDataPropertyRangeAxiom
 from model.axioms.owlobjectpropertyaxiom import \
     OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
     OWLDisjointObjectPropertiesAxiom, OWLInverseObjectPropertiesAxiom, \
@@ -2319,3 +2320,100 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             data_prop_domain_axiom_2,
             parser.data_property_domain.parseString(
                 data_prop_domain_axiom_str_6)[0])
+
+    def test_data_property_range_axiom(self):
+        data_prop_range_axiom_str_1 = \
+            'DataPropertyRange(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_uri>) ' \
+            '<http://example.com#dataProp1> ' \
+            'DataOneOf("23"^^xsd:int "42"^^xsd:int "23.45"^^xsd:double))'
+
+        data_prop_range_axiom_str_2 = \
+            'DataPropertyRange(' \
+            'Annotation(ex:ann "some annotation"@en) ' \
+            'Annotation(ex:ann2 ex:some_uri) ' \
+            'ex:dataProp1 ' \
+            'DataOneOf("23"^^xsd:int "42"^^xsd:int "23.45"^^xsd:double))'
+
+        data_prop_range_axiom_str_3 = \
+            'DataPropertyRange(' \
+            'Annotation(ann "some annotation"@en) ' \
+            'Annotation(ann2 some_uri) ' \
+            'dataProp1 ' \
+            'DataOneOf("23"^^xsd:int "42"^^xsd:int "23.45"^^xsd:double))'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_uri'))}
+
+        data_prop_range_axiom_1 = OWLDataPropertyRangeAxiom(
+            OWLDataProperty('http://example.com#dataProp1'),
+            OWLDataOneOf(
+                Literal('23', None, XSD.int),
+                Literal('42', None, XSD.int),
+                Literal('23.45', None, XSD.double)
+            ),
+            annotations)
+
+        data_prop_range_axiom_str_4 = \
+            'DataPropertyRange(' \
+            '<http://example.com#dataProp1> ' \
+            'DataOneOf("23"^^xsd:int "42"^^xsd:int "23.45"^^xsd:double))'
+
+        data_prop_range_axiom_str_5 = \
+            'DataPropertyRange(ex:dataProp1 ' \
+            'DataOneOf("23"^^xsd:int "42"^^xsd:int "23.45"^^xsd:double))'
+
+        data_prop_range_axiom_str_6 = \
+            'DataPropertyRange(dataProp1 ' \
+            'DataOneOf("23"^^xsd:int "42"^^xsd:int "23.45"^^xsd:double))'
+
+        data_prop_range_axiom_2 = OWLDataPropertyRangeAxiom(
+            OWLDataProperty('http://example.com#dataProp1'),
+            OWLDataOneOf(
+                Literal('23', None, XSD.int),
+                Literal('42', None, XSD.int),
+                Literal('23.45', None, XSD.double)
+            ))
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            data_prop_range_axiom_1,
+            parser.data_property_range.parseString(
+                data_prop_range_axiom_str_1)[0])
+
+        self.assertEqual(
+            data_prop_range_axiom_1,
+            parser.data_property_range.parseString(
+                data_prop_range_axiom_str_2)[0])
+
+        self.assertEqual(
+            data_prop_range_axiom_1,
+            parser.data_property_range.parseString(
+                data_prop_range_axiom_str_3)[0])
+
+        self.assertEqual(
+            data_prop_range_axiom_2,
+            parser.data_property_range.parseString(
+                data_prop_range_axiom_str_4)[0])
+
+        self.assertEqual(
+            data_prop_range_axiom_2,
+            parser.data_property_range.parseString(
+                data_prop_range_axiom_str_5)[0])
+
+        self.assertEqual(
+            data_prop_range_axiom_2,
+            parser.data_property_range.parseString(
+                data_prop_range_axiom_str_6)[0])

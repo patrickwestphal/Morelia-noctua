@@ -13,7 +13,8 @@ from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
     OWLDatatypeDeclarationAxiom, OWLObjectPropertyDeclarationAxiom, \
     OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom, \
     OWLNamedIndividualDeclarationAxiom, OWLDeclarationAxiom
-from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom
+from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom, \
+    OWLDataPropertyRangeAxiom
 from model.axioms.owlobjectpropertyaxiom import \
     OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
     OWLDisjointObjectPropertiesAxiom, OWLInverseObjectPropertiesAxiom, \
@@ -832,12 +833,25 @@ class FunctionalSyntaxParser(OWLParser):
             self.close_paren.suppress()
         ).addParseAction(self._create_data_property_domain_axiom)
 
+        # DataPropertyRange :=
+        #   'DataPropertyRange' '(' axiomAnnotations
+        #                           DataPropertyExpression DataRange ')'
+        self.data_property_range = (
+            Literal('DataPropertyRange').suppress() +
+            self.open_paren.suppress() +
+            self.axiom_annotations +
+            self.data_property_expression +
+            self.data_range +
+            self.close_paren.suppress()
+        ).addParseAction(self._create_data_property_range_axiom)
+
         # DataPropertyAxiom :=
         #   SubDataPropertyOf | EquivalentDataProperties |
         #   DisjointDataProperties | DataPropertyDomain | DataPropertyRange |
         #   FunctionalDataProperty
         self.data_property_axiom = \
-            self.data_property_domain  #| \
+            self.data_property_domain | \
+            self.data_property_range  #| \
             # self.sub_data_property_of | \
             # self.equivalent_data_properties | \
             # self.disjoint_data_properties | \
@@ -1013,6 +1027,17 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLDataPropertyDomainAxiom(data_prop, cls, annotations)
         else:
             return OWLDataPropertyDomainAxiom(data_prop, cls)
+
+    @staticmethod
+    def _create_data_property_range_axiom(parsed) -> OWLDataPropertyRangeAxiom:
+        cls = parsed.pop(-1)
+        data_prop = parsed.pop(-1)
+
+        if parsed:
+            annotations = {a for a in parsed}
+            return OWLDataPropertyRangeAxiom(data_prop, cls, annotations)
+        else:
+            return OWLDataPropertyRangeAxiom(data_prop, cls)
 
     @staticmethod
     def _create_obj_prop_range_axiom(parsed) -> OWLObjectPropertyRangeAxiom:
