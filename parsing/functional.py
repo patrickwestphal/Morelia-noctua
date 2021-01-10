@@ -12,7 +12,7 @@ from model.axioms.classaxiom import OWLSubClassOfAxiom, \
 from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
     OWLDatatypeDeclarationAxiom, OWLObjectPropertyDeclarationAxiom, \
     OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom, \
-    OWLNamedIndividualDeclarationAxiom
+    OWLNamedIndividualDeclarationAxiom, OWLDeclarationAxiom
 from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom
 from model.axioms.owlobjectpropertyaxiom import \
     OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
@@ -886,7 +886,7 @@ class FunctionalSyntaxParser(OWLParser):
             self._prefixes = prefixes
 
     @staticmethod
-    def _create_ontology(parsed):
+    def _create_ontology(parsed) -> OWLOntology:
         parts = parsed[:]
 
         # default values
@@ -923,7 +923,7 @@ class FunctionalSyntaxParser(OWLParser):
             annotations=annotations)
 
     @staticmethod
-    def _create_dtype_restriction(parsed):
+    def _create_dtype_restriction(parsed) -> OWLDatatypeRestriction:
         dtype = parsed.pop(0)
         facet_restrictions = set()
 
@@ -936,7 +936,7 @@ class FunctionalSyntaxParser(OWLParser):
         return OWLDatatypeRestriction(dtype, facet_restrictions)
 
     @staticmethod
-    def _create_disjoint_classes_axiom(parsed):
+    def _create_disjoint_classes_axiom(parsed) -> OWLDisjointClassesAxiom:
         disjoint_classes = set()
         annotations = set()
 
@@ -955,7 +955,9 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLDisjointClassesAxiom(disjoint_classes, annotations)
 
     @staticmethod
-    def _create_data_property_assertion_axiom(parsed):
+    def _create_data_property_assertion_axiom(
+            parsed) -> OWLDataPropertyAssertionAxiom:
+
         literal_value = parsed.pop(-1)
         subject_individual = parsed.pop(-1)
         data_prop = parsed.pop(-1)
@@ -969,7 +971,9 @@ class FunctionalSyntaxParser(OWLParser):
                 subject_individual, data_prop, literal_value)
 
     @staticmethod
-    def _create_object_property_assertion_axiom(parsed):
+    def _create_object_property_assertion_axiom(
+            parsed) -> OWLObjectPropertyAssertionAxiom:
+
         object_individual = parsed.pop(-1)
         subject_individual = parsed.pop(-1)
         obj_property = parsed.pop(-1)
@@ -977,13 +981,16 @@ class FunctionalSyntaxParser(OWLParser):
         if parsed:
             annotations = {a for a in parsed}
             return OWLObjectPropertyAssertionAxiom(
-                subject_individual, obj_property, object_individual, annotations)
+                subject_individual,
+                obj_property,
+                object_individual,
+                annotations)
         else:
             return OWLObjectPropertyAssertionAxiom(
                 subject_individual, obj_property, object_individual)
 
     @staticmethod
-    def _create_class_assertion_axiom(parsed):
+    def _create_class_assertion_axiom(parsed) -> OWLClassAssertionAxiom:
         individual = parsed.pop(-1)
         class_expression = parsed.pop(-1)
 
@@ -1008,7 +1015,7 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLDataPropertyDomainAxiom(data_prop, cls)
 
     @staticmethod
-    def _create_obj_prop_range_axiom(parsed):
+    def _create_obj_prop_range_axiom(parsed) -> OWLObjectPropertyRangeAxiom:
         cls = parsed.pop(-1)
         obj_prop = parsed.pop(-1)
 
@@ -1019,7 +1026,9 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLObjectPropertyRangeAxiom(obj_prop, cls)
 
     @staticmethod
-    def _create_obj_prop_domain_axiom(parsed):
+    def _create_obj_prop_domain_axiom(
+            parsed) -> OWLObjectPropertyDomainAxiom:
+
         cls = parsed.pop(-1)
         obj_prop = parsed.pop(-1)
 
@@ -1030,7 +1039,9 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLObjectPropertyDomainAxiom(obj_prop, cls)
 
     @staticmethod
-    def _create_inverse_obj_props_axiom(parsed):
+    def _create_inverse_obj_props_axiom(
+            parsed) -> OWLInverseObjectPropertiesAxiom:
+
         second = parsed.pop(-1)
         first = parsed.pop(-1)
 
@@ -1041,7 +1052,9 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLInverseObjectPropertiesAxiom(first, second)
 
     @staticmethod
-    def _create_disjoint_obj_props_axiom(parsed):
+    def _create_disjoint_obj_props_axiom(
+            parsed) -> OWLDisjointObjectPropertiesAxiom:
+
         annotations = set()
         obj_props = set()
 
@@ -1061,7 +1074,9 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLDisjointObjectPropertiesAxiom(obj_props, annotations)
 
     @staticmethod
-    def _create_equivalent_obj_props_axiom(parsed):
+    def _create_equivalent_obj_props_axiom(
+            parsed) -> OWLEquivalentObjectPropertiesAxiom:
+
         annotations = set()
         obj_props = set()
 
@@ -1081,7 +1096,7 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLEquivalentObjectPropertiesAxiom(obj_props, annotations)
 
     @staticmethod
-    def _create_sub_obj_prop_of_axiom(parsed):
+    def _create_sub_obj_prop_of_axiom(parsed) -> OWLSubObjectPropertyOfAxiom:
         annotations = set()
         sub_prop = None
 
@@ -1109,7 +1124,7 @@ class FunctionalSyntaxParser(OWLParser):
                 sub_prop, super_prop, annotations)
 
     @staticmethod
-    def _create_disjoint_union_axiom(parsed):
+    def _create_disjoint_union_axiom(parsed) -> OWLDisjointUnionAxiom:
         class_expressions = set()
         annotations = set()
 
@@ -1133,7 +1148,7 @@ class FunctionalSyntaxParser(OWLParser):
                 owl_class, class_expressions, annotations)
 
     @staticmethod
-    def _create_equivalent_classes_axiom(parsed):
+    def _create_equivalent_classes_axiom(parsed) -> OWLEquivalentClassesAxiom:
         equiv_classes = set()
         annotations = set()
 
@@ -1152,7 +1167,7 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLEquivalentClassesAxiom(equiv_classes, annotations)
 
     @staticmethod
-    def _create_sub_cls_of_axiom(parsed):
+    def _create_sub_cls_of_axiom(parsed) -> OWLSubClassOfAxiom:
         annotations = set()
         sub_cls = None
         super_cls = None
@@ -1177,7 +1192,7 @@ class FunctionalSyntaxParser(OWLParser):
             return OWLSubClassOfAxiom(sub_cls, super_cls, annotations)
 
     @staticmethod
-    def _create_obj_exact_cardinality(parsed):
+    def _create_obj_exact_cardinality(parsed) -> OWLObjectExactCardinality:
         if len(parsed) == 2:  # no filler class given
             return OWLObjectExactCardinality(parsed[1], int(parsed[0]))
         else:
@@ -1185,42 +1200,42 @@ class FunctionalSyntaxParser(OWLParser):
                 parsed[1], int(parsed[0]), parsed[2])
 
     @staticmethod
-    def _create_obj_max_cardinality(parsed):
+    def _create_obj_max_cardinality(parsed) -> OWLObjectMaxCardinality:
         if len(parsed) == 2:  # no filler class given
             return OWLObjectMaxCardinality(parsed[1], int(parsed[0]))
         else:
             return OWLObjectMaxCardinality(parsed[1], int(parsed[0]), parsed[2])
 
     @staticmethod
-    def _create_obj_min_cardinality_expression(parsed):
+    def _create_obj_min_cardinality_expression(parsed) -> OWLObjectMinCardinality:
         if len(parsed) == 2:  # no filler class given
             return OWLObjectMinCardinality(parsed[1], int(parsed[0]))
         else:
             return OWLObjectMinCardinality(parsed[1], int(parsed[0]), parsed[2])
 
     @staticmethod
-    def _create_data_exact_cardinality(parsed):
+    def _create_data_exact_cardinality(parsed) -> OWLDataExactCardinality:
         if len(parsed) == 2:  # no filler data range given
             return OWLDataExactCardinality(parsed[1], int(parsed[0]))
         else:
             return OWLDataExactCardinality(parsed[1], int(parsed[0]), parsed[2])
 
     @staticmethod
-    def _create_data_max_cardinality(parsed):
+    def _create_data_max_cardinality(parsed) -> OWLDataMaxCardinality:
         if len(parsed) == 2:  # no filler data range given
             return OWLDataMaxCardinality(parsed[1], int(parsed[0]))
         else:
             return OWLDataMaxCardinality(parsed[1], int(parsed[0]), parsed[2])
 
     @staticmethod
-    def _create_data_min_cardinality(parsed):
+    def _create_data_min_cardinality(parsed) -> OWLDataMinCardinality:
         if len(parsed) == 2:  # no filler data range given
             return OWLDataMinCardinality(parsed[1], int(parsed[0]))
         else:
             return OWLDataMinCardinality(parsed[1], int(parsed[0]), parsed[2])
 
     @staticmethod
-    def _create_declaration_axiom(parsed):
+    def _create_declaration_axiom(parsed) -> OWLDeclarationAxiom:
         annotations = []
         declared_entity = None
 
@@ -1256,7 +1271,7 @@ class FunctionalSyntaxParser(OWLParser):
                                f'{declared_entity}')
 
     @staticmethod
-    def _create_literal(parsed):
+    def _create_literal(parsed) -> RDFLiteral:
         if len(parsed) == 1:
             return RDFLiteral(parsed[0])
 
@@ -1274,12 +1289,12 @@ class FunctionalSyntaxParser(OWLParser):
                 f'Found literal with language tag and type: {parsed}')
 
     @staticmethod
-    def _create_annotation(parsed):
+    def _create_annotation(parsed) -> OWLAnnotation:
         ann_prop, ann_value = parsed
 
         return OWLAnnotation(ann_prop, ann_value)
 
-    def _create_full_iri(self, parsed):
+    def _create_full_iri(self, parsed) -> URIRef:
         parts = parsed[0].split(':')
         parts = [p for p in parts if not p == '']
 
@@ -1293,7 +1308,7 @@ class FunctionalSyntaxParser(OWLParser):
         return URIRef(uri_part1 + uri_part2)
 
     @staticmethod
-    def _create_prefix(parsed):
+    def _create_prefix(parsed) -> dict:
         res = [t for t in parsed[:] if not t == ':']
         if len(res) == 1:
             res = [OWLOntology.default_prefix_dummy] + res

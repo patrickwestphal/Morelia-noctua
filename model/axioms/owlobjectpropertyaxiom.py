@@ -1,8 +1,10 @@
 from functools import reduce
+from typing import Set
 
 from rdflib import URIRef
 
 from model.axioms import OWLAxiom
+from model.objects.annotation import OWLAnnotation
 from model.objects.classexpression import OWLClassExpression
 from model.objects.property import OWLObjectPropertyExpression, \
     OWLObjectProperty
@@ -19,7 +21,7 @@ class OWLSubObjectPropertyOfAxiom(OWLObjectPropertyAxiom):
             self,
             sub_property: OWLObjectPropertyExpression,
             super_property: OWLObjectPropertyExpression,
-            annotations=None):
+            annotations: Set[OWLAnnotation] = None):
         self.sub_property = sub_property
         self.super_property = super_property
         self.annotations = annotations
@@ -70,7 +72,7 @@ class OWLEquivalentObjectPropertiesAxiom(
 
     _hash_idx = 197
 
-    def __init__(self, properties, annotations=None):
+    def __init__(self, properties, annotations: Set[OWLAnnotation] = None):
         self.properties = self._init_properties(properties)
         self.annotations = annotations
 
@@ -103,7 +105,7 @@ class OWLDisjointObjectPropertiesAxiom(
 
     _hash_idx = 199
 
-    def __init__(self, properties, annotations=None):
+    def __init__(self, properties, annotations: Set[OWLAnnotation] = None):
         self.properties = self._init_properties(properties)
         self.annotations = annotations
 
@@ -134,7 +136,12 @@ class OWLDisjointObjectPropertiesAxiom(
 class OWLInverseObjectPropertiesAxiom(OWLObjectPropertyAxiom):
     _hash_idx = 211
 
-    def __init__(self, first, second, annotations=None):
+    def __init__(
+            self,
+            first: OWLObjectPropertyExpression,
+            second: OWLObjectPropertyExpression,
+            annotations: Set[OWLAnnotation] = None):
+
         self.first = first
         self.second = second
         self.annotations = annotations
@@ -170,7 +177,7 @@ class OWLObjectPropertyDomainAxiom(OWLObjectPropertyAxiom):
             self,
             object_property: OWLObjectPropertyExpression,
             domain: OWLClassExpression,
-            annotations=None):
+            annotations: Set[OWLAnnotation] = None):
 
         self.object_property = object_property
         self.domain = domain
@@ -207,7 +214,7 @@ class OWLObjectPropertyRangeAxiom(OWLObjectPropertyAxiom):
             self,
             object_property: OWLObjectPropertyExpression,
             range_ce: OWLClassExpression,
-            annotations=None):
+            annotations: Set[OWLAnnotation] = None):
 
         self.object_property = object_property
         self.range_ce = range_ce
