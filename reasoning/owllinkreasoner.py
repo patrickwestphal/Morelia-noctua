@@ -4,7 +4,7 @@ from typing import Set
 from xml.etree.ElementTree import Element, SubElement, tostring, fromstring
 
 import requests
-from rdflib import Literal
+from rdflib import Literal, XSD
 
 from model import OWLOntology
 from model.axioms import OWLAxiom
@@ -14,11 +14,13 @@ from model.axioms.classaxiom import OWLSubClassOfAxiom
 from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
     OWLNamedIndividualDeclarationAxiom, OWLObjectPropertyDeclarationAxiom, \
     OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom
+from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom, \
+    OWLDataPropertyRangeAxiom
 from model.axioms.owlobjectpropertyaxiom import OWLObjectPropertyRangeAxiom, \
     OWLObjectPropertyDomainAxiom
 from model.objects.classexpression import OWLClass, OWLClassExpression, \
-    OWLObjectSomeValuesFrom
-from model.objects.datarange import OWLDatatype
+    OWLObjectSomeValuesFrom, OWLDataSomeValuesFrom
+from model.objects.datarange import OWLDatatype, OWLDataRange
 from model.objects.individual import OWLNamedIndividual, OWLIndividual
 from model.objects.property import OWLObjectProperty, OWLAnnotationProperty, \
     OWLDataProperty, OWLObjectPropertyExpression
@@ -43,11 +45,44 @@ def _translate_obj_some_values_from(ce: OWLObjectSomeValuesFrom) -> Element:
     return ex_restriction_element
 
 
+def _translate_data_some_values_from(ce: OWLDataSomeValuesFrom) -> Element:
+    ex_restriction_element = Element('owl:DataSomeValuesFrom')
+    role_element = SubElement(ex_restriction_element, 'owl:DataProperty')
+
+    role_element.set('IRI', str(ce.property.iri))
+    filler_element = _translate_data_range(ce.filler)
+    ex_restriction_element.append(filler_element)
+
+    return ex_restriction_element
+
+
+def _translate_datatype(datatype: OWLDatatype) -> Element:
+    dtype_element = Element('Datatype')
+    dtype_element.set('IRI', datatype.iri)
+
+    return dtype_element
+
+
+def _translate_data_range(data_range: OWLDataRange) -> Element:
+    if isinstance(data_range, OWLDatatype):
+        return _translate_datatype(data_range)
+    else:
+        # TODO:
+        # OWLDataIntesectionOf
+        # OWLDataUnionOf
+        # OWLDataComplementOf
+        # OWLDataOneOf
+        # OWLDatatypeRestriction
+        raise NotImplementedError('Data range type not supported, yet')
+
+
 def _translate_class_expression(ce: OWLClassExpression) -> Element:
     if isinstance(ce, OWLClass):
         return _translate_cls(ce)
     elif isinstance(ce, OWLObjectSomeValuesFrom):
         return _translate_obj_some_values_from(ce)
+    elif isinstance(ce, OWLDataSomeValuesFrom):
+        return _translate_data_some_values_from(ce)
     else:
         raise NotImplementedError('Complex class expressions not supported, '
                                   'yet')
