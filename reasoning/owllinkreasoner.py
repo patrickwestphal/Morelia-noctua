@@ -235,6 +235,32 @@ def _translate_owl_annotation_property_declaration(
     return declaration_element
 
 
+def _translate_owl_data_property_domain_axiom(
+        axiom: OWLDataPropertyDomainAxiom) -> Element:
+
+    data_prop_domain_element = Element('owl:DataPropertyDomain')
+    data_prop_element = SubElement(data_prop_domain_element, 'owl:DataProperty')
+    data_prop_element.set('IRI', str(axiom.data_property.iri))
+
+    domain_element = _translate_class_expression(axiom.domain)
+    data_prop_domain_element.append(domain_element)
+
+    return data_prop_domain_element
+
+
+def _translate_owl_data_property_range_axiom(
+        axiom: OWLDataPropertyRangeAxiom) -> Element:
+
+    data_prop_range_element = Element('owl:DataPropertyRange')
+    data_prop_element = SubElement(data_prop_range_element, 'owl:DataProperty')
+    data_prop_element.set('IRI', str(axiom.data_property.iri))
+
+    range_element = _translate_data_range(axiom.data_range)
+    data_prop_range_element.append(range_element)
+
+    return data_prop_range_element
+
+
 def translate_axiom(owl_axiom) -> Element:
     translators = {
         OWLClassDeclarationAxiom: _translate_owl_class_declaration_axiom,
@@ -257,6 +283,10 @@ def translate_axiom(owl_axiom) -> Element:
             _translate_obj_property_domain_axiom,
         OWLAnnotationPropertyDeclarationAxiom:
             _translate_owl_annotation_property_declaration,
+        OWLDataPropertyDomainAxiom:
+            _translate_owl_data_property_domain_axiom,
+        OWLDataPropertyRangeAxiom:
+            _translate_owl_data_property_range_axiom,
     }
 
     translator = translators.get(type(owl_axiom))
