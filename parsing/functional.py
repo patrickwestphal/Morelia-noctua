@@ -13,6 +13,7 @@ from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
     OWLDatatypeDeclarationAxiom, OWLObjectPropertyDeclarationAxiom, \
     OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom, \
     OWLNamedIndividualDeclarationAxiom
+from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom
 from model.axioms.owlobjectpropertyaxiom import \
     OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
     OWLDisjointObjectPropertiesAxiom, OWLInverseObjectPropertiesAxiom, \
@@ -819,6 +820,31 @@ class FunctionalSyntaxParser(OWLParser):
             # self.negative_object_property_assertion | \
             # self.negative_data_property_assertion
 
+        # DataPropertyDomain :=
+        #   'DataPropertyDomain' '(' axiomAnnotations DataPropertyExpression
+        #                            ClassExpression ')'
+        self.data_property_domain = (
+            Literal('DataPropertyDomain').suppress() +
+            self.open_paren.suppress() +
+            self.axiom_annotations +
+            self.data_property_expression +
+            self.class_expression +
+            self.close_paren.suppress()
+        ).addParseAction(self._create_data_property_domain_axiom)
+
+        # DataPropertyAxiom :=
+        #   SubDataPropertyOf | EquivalentDataProperties |
+        #   DisjointDataProperties | DataPropertyDomain | DataPropertyRange |
+        #   FunctionalDataProperty
+        self.data_property_axiom = \
+            self.data_property_domain  #| \
+            # self.sub_data_property_of | \
+            # self.equivalent_data_properties | \
+            # self.disjoint_data_properties | \
+            # self.data_property_domain | \
+            # self.data_property_range | \
+            # self.functional_data_property
+
         # Axiom := Declaration | ClassAxiom | ObjectPropertyAxiom |
         #   DataPropertyAxiom | DatatypeDefinition | HasKey | Assertion |
         #   AnnotationAxiom
@@ -826,8 +852,8 @@ class FunctionalSyntaxParser(OWLParser):
             self.declaration | \
             self.class_axiom | \
             self.object_property_axiom | \
-            self.assertion  #| \
-            # self.data_property_axiom | \
+            self.assertion | \
+            self.data_property_axiom  #| \
             # self.datatype_definition | \
             # self.has_key | \
             # self.annotation_axiom
@@ -967,6 +993,19 @@ class FunctionalSyntaxParser(OWLParser):
                 individual, class_expression, annotations)
         else:
             return OWLClassAssertionAxiom(individual, class_expression)
+
+    @staticmethod
+    def _create_data_property_domain_axiom(
+            parsed) -> OWLDataPropertyDomainAxiom:
+
+        cls = parsed.pop(-1)
+        data_prop = parsed.pop(-1)
+
+        if parsed:
+            annotations = {a for a in parsed}
+            return OWLDataPropertyDomainAxiom(data_prop, cls, annotations)
+        else:
+            return OWLDataPropertyDomainAxiom(data_prop, cls)
 
     @staticmethod
     def _create_obj_prop_range_axiom(parsed):

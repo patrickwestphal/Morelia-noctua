@@ -8,6 +8,7 @@ from model.axioms.assertionaxiom import OWLClassAssertionAxiom, \
     OWLObjectPropertyAssertionAxiom, OWLDataPropertyAssertionAxiom
 from model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
+from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom
 from model.axioms.owlobjectpropertyaxiom import \
     OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
     OWLDisjointObjectPropertiesAxiom, OWLInverseObjectPropertiesAxiom, \
@@ -2223,3 +2224,98 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             data_property_assertion_axiom_2,
             parser.data_property_assertion.parseString(
                 data_property_assertion_axiom_str_6)[0])
+
+    def test_data_property_domain_axiom(self):
+        data_prop_domain_axiom_str_1 = \
+            'DataPropertyDomain(' \
+            'Annotation(<http://example.com#ann> "some annotation"@en) ' \
+            'Annotation(<http://example.com#ann2> ' \
+            '<http://example.com#some_uri>) ' \
+            '<http://example.com#dataProp1> ' \
+            'ObjectSomeValuesFrom(' \
+            '<http://example.com#objProp2> <http://example.com#Cls1>))'
+
+        data_prop_domain_axiom_str_2 = \
+            'DataPropertyDomain(' \
+            'Annotation(ex:ann "some annotation"@en) ' \
+            'Annotation(ex:ann2 ex:some_uri) ' \
+            'ex:dataProp1 ' \
+            'ObjectSomeValuesFrom(ex:objProp2 ex:Cls1))'
+
+        data_prop_domain_axiom_str_3 = \
+            'DataPropertyDomain(' \
+            'Annotation(ann "some annotation"@en) ' \
+            'Annotation(ann2 some_uri) ' \
+            'dataProp1 ' \
+            'ObjectSomeValuesFrom(objProp2 Cls1))'
+
+        annotations = {
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann'),
+                Literal('some annotation', 'en')),
+            OWLAnnotation(
+                OWLAnnotationProperty('http://example.com#ann2'),
+                URIRef('http://example.com#some_uri'))}
+
+        data_prop_domain_axiom_1 = OWLDataPropertyDomainAxiom(
+            OWLDataProperty('http://example.com#dataProp1'),
+            OWLObjectSomeValuesFrom(
+                OWLObjectProperty('http://example.com#objProp2'),
+                OWLClass('http://example.com#Cls1')),
+            annotations)
+
+        data_prop_domain_axiom_str_4 = \
+            'DataPropertyDomain(' \
+            '<http://example.com#dataProp1> ' \
+            'ObjectSomeValuesFrom(' \
+            '<http://example.com#objProp2> <http://example.com#Cls1>))'
+
+        data_prop_domain_axiom_str_5 = \
+            'DataPropertyDomain(ex:dataProp1 ' \
+            'ObjectSomeValuesFrom(ex:objProp2 ex:Cls1))'
+
+        data_prop_domain_axiom_str_6 = \
+            'DataPropertyDomain(dataProp1 ' \
+            'ObjectSomeValuesFrom(objProp2 Cls1))'
+
+        data_prop_domain_axiom_2 = OWLDataPropertyDomainAxiom(
+            OWLDataProperty('http://example.com#dataProp1'),
+            OWLObjectSomeValuesFrom(
+                OWLObjectProperty('http://example.com#objProp2'),
+                OWLClass('http://example.com#Cls1')))
+
+        prefixes = {
+            'ex': 'http://example.com#',
+            'xsd': 'http://www.w3.org/2001/XMLSchema#',
+            OWLOntology.default_prefix_dummy: 'http://example.com#'}
+        parser = FunctionalSyntaxParser(prefixes=prefixes)
+
+        self.assertEqual(
+            data_prop_domain_axiom_1,
+            parser.data_property_domain.parseString(
+                data_prop_domain_axiom_str_1)[0])
+
+        self.assertEqual(
+            data_prop_domain_axiom_1,
+            parser.data_property_domain.parseString(
+                data_prop_domain_axiom_str_2)[0])
+
+        self.assertEqual(
+            data_prop_domain_axiom_1,
+            parser.data_property_domain.parseString(
+                data_prop_domain_axiom_str_3)[0])
+
+        self.assertEqual(
+            data_prop_domain_axiom_2,
+            parser.data_property_domain.parseString(
+                data_prop_domain_axiom_str_4)[0])
+
+        self.assertEqual(
+            data_prop_domain_axiom_2,
+            parser.data_property_domain.parseString(
+                data_prop_domain_axiom_str_5)[0])
+
+        self.assertEqual(
+            data_prop_domain_axiom_2,
+            parser.data_property_domain.parseString(
+                data_prop_domain_axiom_str_6)[0])
