@@ -410,7 +410,22 @@ class OWLLinkReasoner(OWLReasoner):
 
         :return:
         """
-        raise NotImplementedError()
+        request_element = self._init_request()
+
+        get_all_object_properties = \
+            SubElement(request_element, 'GetAllObjectProperties')
+        get_all_object_properties.set('kb', self.kb_uri)
+
+        response = requests.post(
+            self.server_url,
+            tostring(request_element))
+        etree = fromstring(response.content)
+
+        object_properties = set()
+        for oprop_node in etree.findall('*/owl:ObjectProperty', self._prefixes):
+            object_properties.add(OWLObjectProperty(oprop_node.get('IRI')))
+
+        return object_properties
 
     def get_all_individuals(self) -> Set[OWLNamedIndividual]:
         """
@@ -867,10 +882,7 @@ class OWLLinkReasoner(OWLReasoner):
         raise NotImplementedError()
 
     def get_object_properties(self):
-        """
-        TODO: Implement and document
-        """
-        raise NotImplementedError()
+        return self.get_all_object_properties()
 
     def get_data_properties(self):
         """
