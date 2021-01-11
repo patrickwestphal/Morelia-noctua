@@ -875,11 +875,11 @@ class OWLLinkReasoner(OWLReasoner):
         """
         raise NotImplementedError()
 
-    def get_classes(self):
+    def get_classes(self) -> Set[OWLClass]:
         """
         TODO: Implement and document
         """
-        raise NotImplementedError()
+        return self.get_all_classes()
 
     def get_object_properties(self):
         return self.get_all_object_properties()
