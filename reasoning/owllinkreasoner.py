@@ -68,7 +68,7 @@ def _translate_data_some_values_from(ce: OWLDataSomeValuesFrom) -> Element:
 
 def _translate_data_all_values_from(ce: OWLDataAllValuesFrom) -> Element:
     univ_restriction_element = Element('owl:DataAllValuesFrom')
-    role_element = SubElement((univ_restriction_element, 'owl:DataProperty'))
+    role_element = SubElement(univ_restriction_element, 'owl:DataProperty')
     role_element.set('IRI', str(ce.property.iri))
     filler_element = _translate_data_range(ce.filler)
     univ_restriction_element.append(filler_element)
