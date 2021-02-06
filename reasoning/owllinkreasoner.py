@@ -19,7 +19,8 @@ from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom, \
 from model.axioms.owlobjectpropertyaxiom import OWLObjectPropertyRangeAxiom, \
     OWLObjectPropertyDomainAxiom
 from model.objects.classexpression import OWLClass, OWLClassExpression, \
-    OWLObjectSomeValuesFrom, OWLDataSomeValuesFrom
+    OWLObjectSomeValuesFrom, OWLDataSomeValuesFrom, OWLObjectAllValuesFrom, \
+    OWLDataAllValuesFrom
 from model.objects.datarange import OWLDatatype, OWLDataRange
 from model.objects.individual import OWLNamedIndividual, OWLIndividual
 from model.objects.property import OWLObjectProperty, OWLAnnotationProperty, \
@@ -45,15 +46,34 @@ def _translate_obj_some_values_from(ce: OWLObjectSomeValuesFrom) -> Element:
     return ex_restriction_element
 
 
+def _translate_obj_all_values_from(ce: OWLObjectAllValuesFrom) -> Element:
+    univ_restriction_element = Element('owl:ObjectAllValuesFrom')
+    role_element = SubElement(univ_restriction_element, 'owl:ObjectProperty')
+    role_element.set('IRI', str(ce.property.iri))
+    filler_element = _translate_class_expression(ce.filler)
+    univ_restriction_element.append(filler_element)
+
+    return univ_restriction_element
+
+
 def _translate_data_some_values_from(ce: OWLDataSomeValuesFrom) -> Element:
     ex_restriction_element = Element('owl:DataSomeValuesFrom')
     role_element = SubElement(ex_restriction_element, 'owl:DataProperty')
-
     role_element.set('IRI', str(ce.property.iri))
     filler_element = _translate_data_range(ce.filler)
     ex_restriction_element.append(filler_element)
 
     return ex_restriction_element
+
+
+def _translate_data_all_values_from(ce: OWLDataAllValuesFrom) -> Element:
+    univ_restriction_element = Element('owl:DataAllValuesFrom')
+    role_element = SubElement((univ_restriction_element, 'owl:DataProperty'))
+    role_element.set('IRI', str(ce.property.iri))
+    filler_element = _translate_data_range(ce.filler)
+    univ_restriction_element.append(filler_element)
+
+    return univ_restriction_element
 
 
 def _translate_datatype(datatype: OWLDatatype) -> Element:
@@ -83,6 +103,10 @@ def _translate_class_expression(ce: OWLClassExpression) -> Element:
         return _translate_obj_some_values_from(ce)
     elif isinstance(ce, OWLDataSomeValuesFrom):
         return _translate_data_some_values_from(ce)
+    elif isinstance(ce, OWLObjectAllValuesFrom):
+        return _translate_obj_all_values_from(ce)
+    elif isinstance(ce, OWLDataAllValuesFrom):
+        return _translate_data_all_values_from(ce)
     else:
         raise NotImplementedError('Complex class expressions not supported, '
                                   'yet')
