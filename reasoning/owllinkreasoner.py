@@ -383,6 +383,26 @@ class OWLLinkReasoner(OWLReasoner):
                 f'Node type {node.tag} not supported, '
                 f'yet')
 
+    def _release_kb(self):
+        request_element = self._init_request()
+        release_kb_element = SubElement(request_element, 'ReleaseKB')
+        release_kb_element.set('kb', self.kb_uri)
+
+        response = requests.post(
+            self.server_url,
+            tostring(request_element))
+
+        # response.content:
+        # <?xml version="1.0" encoding="utf-8"?>
+        # <!DOCTYPE ResponseMessage>
+        # <ResponseMessage
+        #         xmlns="http://www.owllink.org/owllink#"
+        #         xml:base="http://www.w3.org/2002/07/owl#"
+        #         xmlns:owl="http://www.w3.org/2002/07/owl#"
+        #         xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+        #     <OK/>
+        # </ResponseMessage>
+
     ###########################################################################
     # Entailment Queries, KB Entities, and KB Status
     #
@@ -931,4 +951,7 @@ class OWLLinkReasoner(OWLReasoner):
         TODO: Implement and document
         """
         raise NotImplementedError()
+
+    def close(self):
+        self._release_kb()
 
