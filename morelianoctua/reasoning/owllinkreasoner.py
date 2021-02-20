@@ -41,7 +41,7 @@ def _translate_cls(cls: OWLClass) -> Element:
 def _translate_obj_some_values_from(ce: OWLObjectSomeValuesFrom) -> Element:
     ex_restriction_element = Element('owl:ObjectSomeValuesFrom')
     role_element = SubElement(ex_restriction_element, 'owl:ObjectProperty')
-    role_element.set('IRI', str(ce.property.iri))
+    role_element.set('IRI', str(ce.owl_property.iri))
     filler_element = _translate_class_expression(ce.filler)
     ex_restriction_element.append(filler_element)
 
@@ -96,7 +96,7 @@ def _translate_data_has_value(ce: OWLDataHasValue) -> Element:
 
     has_value_element = Element('owl:DataHasValue')
     role_element = SubElement(has_value_element, 'owl:DataProperty')
-    role_element.set('IRI', str(ce.property.iri))
+    role_element.set('IRI', str(ce.owl_property.iri))
 
     value_element = SubElement(has_value_element, 'owl:Literal')
     literal: Literal = ce.value
@@ -264,7 +264,7 @@ def _translate_owl_object_property_declaration_axiom(
 
     declaration_element = Element('owl:Declaration')
     obj_prop_element = SubElement(declaration_element, 'owl:ObjectProperty')
-    obj_prop_element.set('IRI', str(axiom.obj_property.iri))
+    obj_prop_element.set('IRI', str(axiom.object_property.iri))
 
     return declaration_element
 
