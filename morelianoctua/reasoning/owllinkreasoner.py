@@ -622,25 +622,45 @@ class OWLLinkReasoner(OWLReasoner):
         raise NotImplementedError()
 
     def get_all_datatypes(self) -> Set[OWLDatatype]:
-        """
-        TODO: Implement and document
-        """
-        raise NotImplementedError()
-        # request_element = self._init_request()
-        #
-        # get_all_datatypes = SubElement(request_element, 'GetAllDatatypes')
-        # get_all_datatypes.set('kb', self.kb_uri)
-        #
-        # response = requests.post(
-        #     self.server_url,
-        #     tostring(request_element))
-        # etree = fromstring(response.content)
-        #
-        # datatypes = set()
-        # for class_node in etree.findall('*/owl:Class', self._prefixes):
-        #     datatypes.add(OWLDatatype(class_node.get('IRI')))
-        #
-        # return datatypes
+        request_element = self._init_request()
+
+        get_all_datatypes = SubElement(request_element, 'GetAllDatatypes')
+        get_all_datatypes.set('kb', self.kb_uri)
+
+        response = requests.post(
+            self.server_url,
+            tostring(request_element))
+        etree = fromstring(response.content)
+
+        # <?xml version="1.0" encoding="UTF-8"?>
+        # <ResponseMessage xmlns="http://www.owllink.org/owllink#"
+        #      xml:base="http://www.owllink.org/owllink"
+        #      xmlns:owl="http://www.w3.org/2002/07/owl#"
+        #      xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+        #     <SetOfDatatypes>
+        #         <owl:Datatype abbreviatedIRI="xsd:string"/>
+        #         <owl:Datatype abbreviatedIRI="xsd:nonNegativeInteger"/>
+        #         <owl:Datatype abbreviatedIRI="xsd:int"/>
+        #     </SetOfDatatypes>
+        # </ResponseMessage>
+        datatypes = set()
+        for datatype_node in etree.findall('*/owl:Datatype', self._prefixes):
+            dtype_iri = datatype_node.get('IRI')
+            if dtype_iri is None:
+                dtype_iri = datatype_node.get('abbreviatedIRI')
+                prefix, local_part = dtype_iri.split(':', 1)
+
+                namespace = self._prefixes.get(prefix)
+                if namespace is None:
+                    if prefix.lower() == 'xsd':
+                        namespace = str(XSD)
+                    else:
+                        raise Exception(f'Unknown prefix {prefix}')
+
+                dtype_iri = namespace + local_part
+            datatypes.add(OWLDatatype(dtype_iri))
+
+        return datatypes
 
     def get_all_data_properties(self) -> Set[OWLDataProperty]:
         request_element = self._init_request()
