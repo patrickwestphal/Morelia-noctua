@@ -35,24 +35,6 @@ class HasOperands(OWLObject):
         else:
             return self.operands == other.operands
 
-    @staticmethod
-    def _init_operands(operands):
-        operand_cls_exprs = set()
-
-        for operand in operands:
-            from model.objects.classexpression import OWLClassExpression
-            if isinstance(operand, OWLClassExpression):
-                operand_cls_exprs.add(operand)
-
-            elif isinstance(operand, URIRef):
-                from model.objects.classexpression import OWLClass
-                operand_cls_exprs.add(OWLClass(operand))
-
-            else:
-                operand_cls_exprs.add(OWLClass(operand))
-
-        return operand_cls_exprs
-
 
 class HasDatatypeOperands(OWLObject):
     operands = None
@@ -69,7 +51,7 @@ class HasDatatypeOperands(OWLObject):
         datatype_operands = set()
 
         for operand in operands:
-            from model.objects.datarange import OWLDatatype
+            from morelianoctua.model.objects.datarange import OWLDatatype
             if isinstance(operand, OWLDatatype):
                 datatype_operands.add(operand)
 

@@ -2,8 +2,8 @@ from functools import reduce
 
 from rdflib import Literal
 
-from model.objects import HasDatatypeOperands, HasIRI, OWLObject
-from model.objects.facet import OWLFacetRestriction
+from morelianoctua.model.objects import HasDatatypeOperands, HasIRI, OWLObject
+from morelianoctua.model.objects.facet import OWLFacetRestriction
 
 
 class OWLDataRange(OWLObject):

@@ -1,6 +1,6 @@
 from rdflib import BNode
 
-from model.objects import HasIRI, OWLObject
+from morelianoctua.model.objects import HasIRI, OWLObject
 
 
 class OWLIndividual(OWLObject):

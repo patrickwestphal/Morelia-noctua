@@ -1,3 +1,6 @@
+from rdflib import Graph
+
+
 class OWLOntology(object):
     default_prefix_dummy = 'DEFAULT'
 
@@ -18,3 +21,7 @@ class OWLOntology(object):
             self.annotations = annotations
         else:
             self.annotations = []
+
+    def as_rdf_graph(self) -> Graph:
+        from morelianoctua.util.converters.rdfconverter import to_rdf
+        return to_rdf(self)

@@ -1,11 +1,11 @@
 from functools import reduce
 from typing import Set
 
-from model.axioms import OWLAxiom
-from model.objects.annotation import OWLAnnotation
-from model.objects.classexpression import OWLClassExpression
-from model.objects.datarange import OWLDataRange
-from model.objects.property import OWLDataProperty
+from morelianoctua.model.axioms import OWLAxiom
+from morelianoctua.model.objects.annotation import OWLAnnotation
+from morelianoctua.model.objects.classexpression import OWLClassExpression
+from morelianoctua.model.objects.datarange import OWLDataRange
+from morelianoctua.model.objects.property import OWLDataProperty
 
 
 class OWLDataPropertyAxiom(OWLAxiom):

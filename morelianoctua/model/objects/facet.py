@@ -1,6 +1,6 @@
 from rdflib import XSD, RDF, Literal, URIRef
 
-from model.objects import OWLObject
+from morelianoctua.model.objects import OWLObject
 
 LENGTH = XSD.length
 MIN_LENGTH = XSD.minLength

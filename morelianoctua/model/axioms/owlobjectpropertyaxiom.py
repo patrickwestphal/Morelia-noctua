@@ -3,10 +3,10 @@ from typing import Set
 
 from rdflib import URIRef
 
-from model.axioms import OWLAxiom
-from model.objects.annotation import OWLAnnotation
-from model.objects.classexpression import OWLClassExpression
-from model.objects.property import OWLObjectPropertyExpression, \
+from morelianoctua.model.axioms import OWLAxiom
+from morelianoctua.model.objects.annotation import OWLAnnotation
+from morelianoctua.model.objects.classexpression import OWLClassExpression
+from morelianoctua.model.objects.property import OWLObjectPropertyExpression, \
     OWLObjectProperty
 
 

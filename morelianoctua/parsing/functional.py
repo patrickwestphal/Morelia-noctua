@@ -1359,3 +1359,11 @@ class FunctionalSyntaxParser(OWLParser):
 
     def parse_file(self, file_path):
         return self.ontology_document.parseFile(file_path, True)[0]
+
+
+if __name__ == '__main__':
+    file_path = '/home/pwestphal/develop/workspace_pykeen/tmp'
+    parser = FunctionalSyntaxParser()
+    res = parser.parse_file(file_path)
+    print(res)
+    pass

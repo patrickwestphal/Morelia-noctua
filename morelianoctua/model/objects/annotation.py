@@ -1,4 +1,4 @@
-from model.objects.property import OWLAnnotationProperty
+from morelianoctua.model.objects.property import OWLAnnotationProperty
 
 
 class OWLAnnotation(object):

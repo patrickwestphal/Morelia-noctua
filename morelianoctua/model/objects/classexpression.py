@@ -1,16 +1,16 @@
-from abc import ABC
 from functools import reduce
+from typing import Set, Tuple
 
-from rdflib import URIRef, BNode, OWL, Literal, RDFS
+from rdflib import OWL, Literal, RDFS
 
-from model.objects import HasIRI, HasOperands, OWLObject
-from model.objects.datarange import OWLDataRange, OWLDatatype
-from model.objects.individual import OWLIndividual, OWLAnonymousIndividual, \
-    OWLNamedIndividual
-from model.objects.property import OWLObjectPropertyExpression, OWLDataProperty
+from morelianoctua.model.objects import HasIRI, HasOperands, OWLObject
+from morelianoctua.model.objects.datarange import OWLDataRange, OWLDatatype
+from morelianoctua.model.objects.individual import OWLIndividual
+from morelianoctua.model.objects.property import OWLObjectPropertyExpression, \
+    OWLDataProperty
 
 
-class OWLClassExpression(ABC):
+class OWLClassExpression(OWLObject):
     pass
 
 
@@ -27,8 +27,8 @@ class OWLClass(OWLClassExpression, HasIRI):
 class OWLObjectIntersectionOf(OWLClassExpression, HasOperands):
     _hash_idx = 7
 
-    def __init__(self, *operands):
-        self.operands = self._init_operands(operands)
+    def __init__(self, *operands: Tuple[OWLClassExpression]):
+        self.operands: Set[OWLClassExpression] = {o for o in operands}
 
     def __hash__(self):
         return reduce(
@@ -39,8 +39,8 @@ class OWLObjectIntersectionOf(OWLClassExpression, HasOperands):
 class OWLObjectUnionOf(OWLClassExpression, HasOperands):
     _hash_idx = 11
 
-    def __init__(self, *operands):
-        self.operands = self._init_operands(operands)
+    def __init__(self, *operands: Tuple[OWLClassExpression]):
+        self.operands: Set[OWLClassExpression] = {o for o in operands}
 
     def __hash__(self):
         return reduce(
@@ -73,26 +73,8 @@ class OWLObjectComplementOf(OWLClassExpression):
 class OWLObjectOneOf(OWLClassExpression):
     _hash_idx = 17
 
-    def __init__(self, *individuals):
-        self.individuals = set()
-
-        for individual in individuals:
-            if isinstance(individual, OWLIndividual):
-                self.individuals.add(individual)
-
-            elif isinstance(individuals, URIRef):
-                self.individuals.add(OWLNamedIndividual(individuals))
-
-            elif isinstance(individual, BNode):
-                self.individuals.add(OWLAnonymousIndividual(individual))
-
-            else:  # just the identifier str given, not an individual objects
-                assert isinstance(individual, str)
-
-                if individual.startswith('_:'):
-                    self.individuals.add(OWLAnonymousIndividual(individual))
-                else:
-                    self.individuals.add(OWLNamedIndividual(individuals))
+    def __init__(self, *individuals: Tuple[OWLIndividual]):
+        self.individuals: Set[OWLIndividual] = {i for i in individuals}
 
     def __eq__(self, other):
         if not isinstance(other, OWLObjectOneOf):
@@ -114,18 +96,18 @@ class OWLObjectSomeValuesFrom(OWLClassExpression):
             owl_property: OWLObjectPropertyExpression,
             filler: OWLClassExpression):
 
-        self.property = owl_property
+        self.owl_property = owl_property
         self.filler = filler
 
     def __eq__(self, other):
         if not isinstance(other, OWLObjectSomeValuesFrom):
             return False
         else:
-            return self.property == other.property \
+            return self.owl_property == other.owl_property \
                    and self.filler == other.filler
 
     def __hash__(self):
-        return self._hash_idx * hash(self.property) + hash(self.filler)
+        return self._hash_idx * hash(self.owl_property) + hash(self.filler)
 
 
 class OWLObjectAllValuesFrom(OWLClassExpression):
@@ -188,7 +170,7 @@ class OWLObjectHasSelf(OWLClassExpression):
 
 
 class OWLObjectCardinalityRestriction(OWLClassExpression):
-    property: OWLObject
+    owl_property: OWLObject
     cardinality: int
     filler: OWLClassExpression
 
@@ -196,7 +178,7 @@ class OWLObjectCardinalityRestriction(OWLClassExpression):
         if not type(self) == type(other):
             return False
         else:
-            return self.property == other.property \
+            return self.owl_property == other.owl_property \
                    and self.cardinality == other.cardinality \
                    and self.filler == other.filler
 
@@ -306,21 +288,22 @@ class OWLDataHasValue(OWLClassExpression):
     _hash_idx = 59
 
     def __init__(self, owl_property: OWLDataProperty, value: Literal):
-        self.property = owl_property
+        self.owl_property = owl_property
         self.value = value
 
     def __eq__(self, other):
         if not isinstance(other, OWLDataHasValue):
             return False
         else:
-            return self.property == other.property and self.value == other.value
+            return self.owl_property == other.owl_property and \
+                self.value == other.value
 
     def __hash__(self):
-        return self._hash_idx * hash(self.property) + hash(self.value)
+        return self._hash_idx * hash(self.owl_property) + hash(self.value)
 
 
 class OWLDataCardinalityRestriction(OWLClassExpression):
-    property: OWLDataProperty
+    owl_property: OWLDataProperty
     cardinality: int
     filler: OWLDataRange
 
@@ -328,7 +311,7 @@ class OWLDataCardinalityRestriction(OWLClassExpression):
         if not type(self) == type(other):
             return False
         else:
-            return self.property == other.property \
+            return self.owl_property == other.owl_property \
                    and self.cardinality == other.cardinality \
                    and self.filler == other.filler
 

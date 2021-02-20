@@ -1,8 +1,11 @@
 from functools import reduce
+from typing import Set
 
-from model.axioms import OWLAxiom
-from model.objects import HasOperands
-from model.objects.classexpression import OWLClassExpression, OWLClass
+from morelianoctua.model.axioms import OWLAxiom
+from morelianoctua.model.objects import HasOperands
+from morelianoctua.model.objects.annotation import OWLAnnotation
+from morelianoctua.model.objects.classexpression import OWLClassExpression, \
+    OWLClass
 
 
 class OWLClassAxiom(OWLAxiom):
@@ -16,7 +19,7 @@ class OWLSubClassOfAxiom(OWLClassAxiom):
             self,
             sub_class: OWLClassExpression,
             super_class: OWLClassExpression,
-            annotations=None):
+            annotations: Set[OWLAnnotation] = None):
 
         self.sub_class = sub_class
         self.super_class = super_class
@@ -45,7 +48,11 @@ class OWLSubClassOfAxiom(OWLClassAxiom):
 class OWLEquivalentClassesAxiom(OWLClassAxiom):
     _hash_idx = 149
 
-    def __init__(self, class_expressions, annotations=None):
+    def __init__(
+            self,
+            class_expressions: Set[OWLClassExpression],
+            annotations: Set[OWLAnnotation] = None):
+
         self.class_expressions = class_expressions
         self.annotations = annotations
 
@@ -72,7 +79,11 @@ class OWLEquivalentClassesAxiom(OWLClassAxiom):
 class OWLDisjointClassesAxiom(OWLClassAxiom):
     _hash_idx = 151
 
-    def __init__(self, class_expressions, annotations=None):
+    def __init__(
+            self,
+            class_expressions: Set[OWLClassExpression],
+            annotations: Set[OWLAnnotation] = None):
+
         self.class_expressions = class_expressions
         self.annotations = annotations
 
@@ -102,11 +113,11 @@ class OWLDisjointUnionAxiom(OWLClassAxiom, HasOperands):
     def __init__(
             self,
             owl_class: OWLClass,
-            class_expressions,
-            annotations=None):
+            class_expressions: Set[OWLClassExpression],
+            annotations: Set[OWLAnnotation] = None):
 
         self.owl_class = owl_class
-        self.operands = self._init_operands(class_expressions)
+        self.operands = class_expressions
         self.annotations = annotations
 
     def __eq__(self, other):

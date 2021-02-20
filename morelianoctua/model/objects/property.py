@@ -1,4 +1,4 @@
-from model.objects import HasIRI, OWLObject
+from morelianoctua.model.objects import HasIRI, OWLObject
 
 
 class OWLProperty(HasIRI):

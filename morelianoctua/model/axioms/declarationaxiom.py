@@ -1,11 +1,13 @@
 from functools import reduce
+from typing import Set
 
-from model.axioms import OWLAxiom
-from model.objects.classexpression import OWLClass
-from model.objects.datarange import OWLDatatype
-from model.objects.individual import OWLNamedIndividual
-from model.objects.property import OWLObjectProperty, OWLDataProperty, \
-    OWLAnnotationProperty
+from morelianoctua.model.axioms import OWLAxiom
+from morelianoctua.model.objects.annotation import OWLAnnotation
+from morelianoctua.model.objects.classexpression import OWLClass
+from morelianoctua.model.objects.datarange import OWLDatatype
+from morelianoctua.model.objects.individual import OWLNamedIndividual
+from morelianoctua.model.objects.property import OWLObjectProperty, \
+    OWLDataProperty, OWLAnnotationProperty
 
 
 class OWLDeclarationAxiom(OWLAxiom):
@@ -15,7 +17,7 @@ class OWLDeclarationAxiom(OWLAxiom):
 class OWLClassDeclarationAxiom(OWLDeclarationAxiom):
     _hash_idx = 163
 
-    def __init__(self, cls: OWLClass, annotations=None):
+    def __init__(self, cls: OWLClass, annotations: Set[OWLAnnotation] = None):
         self.cls = cls
         self.annotations = annotations
 
@@ -35,7 +37,7 @@ class OWLDatatypeDeclarationAxiom(OWLDeclarationAxiom):
 
     def __init__(self, dtype: OWLDatatype, annotations=None):
         self.dtype = dtype
-        self.annotations = annotations
+        self.annotations: Set[OWLAnnotation] = annotations
 
     def __hash__(self):
         tmp = self._hash_idx * hash(self.dtype)
@@ -51,12 +53,15 @@ class OWLDatatypeDeclarationAxiom(OWLDeclarationAxiom):
 class OWLObjectPropertyDeclarationAxiom(OWLDeclarationAxiom):
     _hash_idx = 173
 
-    def __init__(self, obj_property: OWLObjectProperty, annotations=None):
-        self.obj_property = obj_property
+    def __init__(
+            self,
+            object_property: OWLObjectProperty,
+            annotations: Set[OWLAnnotation] = None):
+        self.object_property = object_property
         self.annotations = annotations
 
     def __hash__(self):
-        tmp = self._hash_idx * hash(self.obj_property)
+        tmp = self._hash_idx * hash(self.object_property)
 
         if self.annotations:
             tmp += reduce(
@@ -108,7 +113,9 @@ class OWLNamedIndividualDeclarationAxiom(OWLDeclarationAxiom):
     _hash_idx = 191
 
     def __init__(
-            self, individual: OWLNamedIndividual, annotations=None):
+            self,
+            individual: OWLNamedIndividual,
+            annotations: Set[OWLAnnotation] = None):
 
         self.individual = individual
         self.annotations = annotations

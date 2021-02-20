@@ -10,7 +10,7 @@ from model import OWLOntology
 from model.axioms import OWLAxiom
 from model.axioms.assertionaxiom import OWLObjectPropertyAssertionAxiom, \
     OWLClassAssertionAxiom, OWLDataPropertyAssertionAxiom
-from model.axioms.classaxiom import OWLSubClassOfAxiom
+from model.axioms.classaxiom import OWLSubClassOfAxiom, OWLDisjointClassesAxiom
 from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
     OWLNamedIndividualDeclarationAxiom, OWLObjectPropertyDeclarationAxiom, \
     OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom
@@ -20,7 +20,7 @@ from model.axioms.owlobjectpropertyaxiom import OWLObjectPropertyRangeAxiom, \
     OWLObjectPropertyDomainAxiom
 from model.objects.classexpression import OWLClass, OWLClassExpression, \
     OWLObjectSomeValuesFrom, OWLDataSomeValuesFrom, OWLObjectAllValuesFrom, \
-    OWLDataAllValuesFrom
+    OWLDataAllValuesFrom, OWLDataHasValue, OWLObjectUnionOf
 from model.objects.datarange import OWLDatatype, OWLDataRange
 from model.objects.individual import OWLNamedIndividual, OWLIndividual
 from model.objects.property import OWLObjectProperty, OWLAnnotationProperty, \
@@ -76,8 +76,60 @@ def _translate_data_all_values_from(ce: OWLDataAllValuesFrom) -> Element:
     return univ_restriction_element
 
 
+def _translate_data_has_value(ce: OWLDataHasValue) -> Element:
+    # e.g.:
+    # <owl:DataHasValue>
+    #   <owl:DataProperty IRI="http://dl-learner.org/ont#dataprop2"/>
+    #   <owl:Literal
+    #       xml:lang="en"
+    #       datatypeIRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+    #     >foo</owl:Literal>
+    # </owl:DataHasValue>
+    #
+    # <owl:DataHasValue>
+    #   <owl:DataProperty IRI="http://dl-learner.org/ont#dataprop"/>
+    #   <owl:Literal
+    #       datatypeIRI="http://www.w3.org/2001/XMLSchema#int">42</owl:Literal>
+    # </owl:DataHasValue>
+
+    has_value_element = Element('owl:DataHasValue')
+    role_element = SubElement(has_value_element, 'owl:DataProperty')
+    role_element.set('IRI', str(ce.property.iri))
+
+    value_element = SubElement(has_value_element, 'owl:Literal')
+    literal: Literal = ce.value
+
+    value_element.text = str(literal.value)
+
+    if literal.language:
+        value_element.set('xml:lang', literal.language)
+
+    if literal.datatype:
+        value_element.set('datatypeIRI', str(literal.datatype))
+
+    return has_value_element
+
+
+def _translate_object_union_of(ce: OWLObjectUnionOf) -> Element:
+    # e.g.:
+    # <owl:ObjectUnionOf>
+    #   <owl:Class IRI="http://dl-learner.org/ont#Cls1"/>
+    #   <owl:Class IRI="http://dl-learner.org/ont#Cls2"/>
+    #   <owl:Class IRI="http://dl-learner.org/ont#Cls3"/>
+    # </owl:ObjectUnionOf>
+
+    union_of_element = Element('owl:ObjectUnionOf')
+
+    for union_ce in ce.operands:
+        union_element = _translate_class_expression(union_ce)
+        union_of_element.append(union_element)
+
+    return union_of_element
+
+
 def _translate_datatype(datatype: OWLDatatype) -> Element:
-    dtype_element = Element('Datatype')
+    # <owl:Datatype abbreviatedIRI="xsd:int"/>
+    dtype_element = Element('owl:Datatype')
     dtype_element.set('IRI', datatype.iri)
 
     return dtype_element
@@ -107,9 +159,13 @@ def _translate_class_expression(ce: OWLClassExpression) -> Element:
         return _translate_obj_all_values_from(ce)
     elif isinstance(ce, OWLDataAllValuesFrom):
         return _translate_data_all_values_from(ce)
+    elif isinstance(ce, OWLDataHasValue):
+        return _translate_data_has_value(ce)
+    elif isinstance(ce, OWLObjectUnionOf):
+        return _translate_object_union_of(ce)
     else:
-        raise NotImplementedError('Complex class expressions not supported, '
-                                  'yet')
+        raise NotImplementedError(f'Complex class expressions of type '
+                                  f'{type(ce)} not supported, yet')
 
 
 def _translate_owl_class_declaration_axiom(
@@ -124,23 +180,22 @@ def _translate_owl_class_declaration_axiom(
 def _translate_owl_subclass_of_axiom(axiom: OWLSubClassOfAxiom) -> Element:
     axiom_element = Element('owl:SubClassOf')
 
-    sub_cls_element = SubElement(axiom_element, 'owl:Class')
-
     if isinstance(axiom.sub_class, OWLClass):
+        sub_cls_element = SubElement(axiom_element, 'owl:Class')
         sub_cls_element.set('IRI', str(axiom.sub_class.iri))
 
     else:
-        raise NotImplementedError('OWLLink translation for non-named classes '
-                                  'not implemented, yet')
-
-    super_cls_element = SubElement(axiom_element, 'owl:Class')
+        sub_cls_element = _translate_class_expression(axiom.sub_class)
+        axiom_element.append(sub_cls_element)
 
     if isinstance(axiom.super_class, OWLClass):
+        super_cls_element = SubElement(axiom_element, 'owl:Class')
         super_cls_element.set('IRI', str(axiom.super_class.iri))
 
     else:
-        raise NotImplementedError('OWLLink translation for non-named classes '
-                                  'not implemented, yet')
+        super_cls_element = _translate_class_expression(axiom.super_class)
+        axiom_element.append(super_cls_element)
+
     return axiom_element
 
 
@@ -275,6 +330,11 @@ def _translate_owl_data_property_domain_axiom(
 def _translate_owl_data_property_range_axiom(
         axiom: OWLDataPropertyRangeAxiom) -> Element:
 
+    # e.g.:
+    # <owl:DataPropertyRange>
+    #   <owl:DataProperty IRI="http://dl-learner.org/ont#someDataProperty"/>
+    #   <owl:Datatype abbreviatedIRI="xsd:int"/>
+    # </owl:DataPropertyRange>
     data_prop_range_element = Element('owl:DataPropertyRange')
     data_prop_element = SubElement(data_prop_range_element, 'owl:DataProperty')
     data_prop_element.set('IRI', str(axiom.data_property.iri))
@@ -283,6 +343,24 @@ def _translate_owl_data_property_range_axiom(
     data_prop_range_element.append(range_element)
 
     return data_prop_range_element
+
+
+def _translate_disjoint_classes_axiom(
+        axiom: OWLDisjointClassesAxiom) -> Element:
+    # e.g.:
+    # <owl:DisjointClasses>
+    #   <owl:Class IRI="http://dl-learner.org/ont#Cls1"/>
+    #   <owl:Class IRI="http://dl-learner.org/ont#Cls2"/>
+    #   <owl:Class IRI="http://dl-learner.org/ont#Cls3"/>
+    # </owl:DisjointClasses>
+
+    disjoint_classes_element = Element('owl:DisjointClasses')
+
+    for ce in axiom.class_expressions:
+        ce_element = _translate_class_expression(ce)
+        disjoint_classes_element.append(ce_element)
+
+    return disjoint_classes_element
 
 
 def translate_axiom(owl_axiom) -> Element:
@@ -311,6 +389,8 @@ def translate_axiom(owl_axiom) -> Element:
             _translate_owl_data_property_domain_axiom,
         OWLDataPropertyRangeAxiom:
             _translate_owl_data_property_range_axiom,
+        OWLDisjointClassesAxiom:
+            _translate_disjoint_classes_axiom,
     }
 
     translator = translators.get(type(owl_axiom))
@@ -383,7 +463,25 @@ class OWLLinkReasoner(OWLReasoner):
                 f'Node type {node.tag} not supported, '
                 f'yet')
 
-    def _release_kb(self):
+    ###########################################################################
+    # Reasoner and KB management
+
+    def get_description(self):
+        raise NotImplementedError()
+
+    def create_kb(self):
+        raise NotImplementedError()
+
+    def get_prefixes(self):
+        raise NotImplementedError()
+
+    def get_settings(self):
+        raise NotImplementedError()
+
+    def set(self):
+        raise NotImplementedError()
+
+    def release_kb(self):
         request_element = self._init_request()
         release_kb_element = SubElement(request_element, 'ReleaseKB')
         release_kb_element.set('kb', self.kb_uri)
@@ -402,6 +500,18 @@ class OWLLinkReasoner(OWLReasoner):
         #         xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
         #     <OK/>
         # </ResponseMessage>
+
+    def tell(self):
+        raise NotImplementedError()
+
+    def load_ontologies(self):
+        raise NotImplementedError()
+
+    def classify(self):
+        raise NotImplementedError()
+
+    def realize(self):
+        raise NotImplementedError()
 
     ###########################################################################
     # Entailment Queries, KB Entities, and KB Status
@@ -504,12 +614,42 @@ class OWLLinkReasoner(OWLReasoner):
         TODO: Implement and document
         """
         raise NotImplementedError()
+        # request_element = self._init_request()
+        #
+        # get_all_datatypes = SubElement(request_element, 'GetAllDatatypes')
+        # get_all_datatypes.set('kb', self.kb_uri)
+        #
+        # response = requests.post(
+        #     self.server_url,
+        #     tostring(request_element))
+        # etree = fromstring(response.content)
+        #
+        # datatypes = set()
+        # for class_node in etree.findall('*/owl:Class', self._prefixes):
+        #     datatypes.add(OWLDatatype(class_node.get('IRI')))
+        #
+        # return datatypes
 
     def get_all_data_properties(self) -> Set[OWLDataProperty]:
         """
         TODO: Implement and document
         """
-        raise NotImplementedError()
+        request_element = self._init_request()
+
+        get_all_data_properties = \
+            SubElement(request_element, 'GetAllDataProperties')
+        get_all_data_properties.set('kb', self.kb_uri)
+
+        response = requests.post(
+            self.server_url,
+            tostring(request_element))
+        etree = fromstring(response.content)
+
+        data_properties = set()
+        for dprop_node in etree.findall('*/owl:DataProperty', self._prefixes):
+            data_properties.add(OWLDataProperty(dprop_node.get('IRI')))
+
+        return data_properties
 
     def is_kb_satisfiable(self) -> bool:
         """
@@ -928,11 +1068,8 @@ class OWLLinkReasoner(OWLReasoner):
     def get_object_properties(self):
         return self.get_all_object_properties()
 
-    def get_data_properties(self):
-        """
-        TODO: Implement and document
-        """
-        raise NotImplementedError()
+    def get_data_properties(self) -> Set[OWLDataProperty]:
+        return self.get_all_data_properties()
 
     def get_annotation_properties(self):
         """
@@ -953,5 +1090,46 @@ class OWLLinkReasoner(OWLReasoner):
         raise NotImplementedError()
 
     def close(self):
-        self._release_kb()
+        self.release_kb()
 
+
+if __name__ == '__main__':
+    server_url = 'http://localhost:8383'
+
+    # ontology = FunctionalSyntaxParser().parse_file(
+    #     '/home/pwestphal/develop/workspace_morelia_noctua/'
+    #     'functional_test_data_some_vals_from1.owl')
+    # ontology = FunctionalSyntaxParser().parse_file(
+    #     '/home/pwestphal/develop/workspace_pykeen/tmp2')
+    ontology = FunctionalSyntaxParser().parse_file(
+        '/home/pwestphal/develop/workspace_pykeen/'
+        'hepatitis_functional_transformed_wo_comments2.owl')
+    reasoner = OWLLinkReasoner(ontology, server_url)
+
+    reasoner.close()
+    # foo2 = reasoner.is_entailed(
+    #     OWLClassAssertionAxiom(
+    #         OWLNamedIndividual(
+    #             'http://www.semanticweb.org/pwestphal/ontologies/'
+    #             '2021/0/untitled-ontology-29#indiv1'),
+    #         OWLDataSomeValuesFrom(
+    #             OWLDataProperty(
+    #                 'http://www.semanticweb.org/pwestphal/ontologies/'
+    #                 '2021/0/untitled-ontology-29#dataProp1'),
+    #             OWLDatatype(XSD.int))))
+    # foo = reasoner.is_entailed(
+    #     OWLClassAssertionAxiom(
+    #         OWLNamedIndividual('http://dl-learner.org/res/screening998'),
+    #         OWLDataSomeValuesFrom(
+    #             OWLDataProperty('http://dl-learner.org/ont/albuminLevel'),
+    #             OWLDatatype(XSD.int))))
+
+    # all_data_properties = reasoner.get_instances(OWLClass('http://www.w3.org/2002/07/owl#DatatypeProperty'))
+    obj_props = reasoner.get_object_properties()
+
+    # all_classes = reasoner.get_classes()
+    # subclasses = reasoner.get_subclasses(OWLClass('http://ex.com#Cls1'), False)
+    # superclasses = reasoner.get_superclasses(OWLClass('http://ex.com#Cls4'), True)
+
+    # print(all_classes)
+    pass

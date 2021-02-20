@@ -1,11 +1,14 @@
 from functools import reduce
+from typing import Set
 
 from rdflib import Literal
 
-from model.axioms import OWLAxiom
-from model.objects.classexpression import OWLClassExpression
-from model.objects.individual import OWLIndividual
-from model.objects.property import OWLDataProperty, OWLObjectPropertyExpression
+from morelianoctua.model.axioms import OWLAxiom
+from morelianoctua.model.objects.annotation import OWLAnnotation
+from morelianoctua.model.objects.classexpression import OWLClassExpression
+from morelianoctua.model.objects.individual import OWLIndividual
+from morelianoctua.model.objects.property import OWLDataProperty, \
+    OWLObjectPropertyExpression
 
 
 class OWLClassAssertionAxiom(OWLAxiom):
@@ -14,7 +17,7 @@ class OWLClassAssertionAxiom(OWLAxiom):
     def __init__(
             self, individual: OWLIndividual,
             class_expression: OWLClassExpression,
-            annotations=None):
+            annotations: Set[OWLAnnotation] = None):
 
         self.individual = individual
         self.class_expression = class_expression
