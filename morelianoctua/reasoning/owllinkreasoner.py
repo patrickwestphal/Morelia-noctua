@@ -1064,7 +1064,7 @@ class OWLLinkReasoner(OWLReasoner):
     def get_object_property_ranges(
             self,
             pe: OWLObjectPropertyExpression,
-            direct: bool = False) -> Set[OWLClass]:
+            direct: bool = False) -> Set[OWLClassExpression]:
         """
         TODO: Implement and document
         """
