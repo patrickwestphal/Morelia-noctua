@@ -2,33 +2,32 @@ import unittest
 
 from rdflib import URIRef, Literal, XSD, BNode
 
-import model
-from model import OWLOntology
-from model.axioms.assertionaxiom import OWLClassAssertionAxiom, \
+from morelianoctua.model import OWLOntology
+from morelianoctua.model import OWLClassAssertionAxiom, \
     OWLObjectPropertyAssertionAxiom, OWLDataPropertyAssertionAxiom
-from model.axioms.classaxiom import OWLSubClassOfAxiom, \
+from morelianoctua.model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
-from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom, \
+from morelianoctua.model import OWLDataPropertyDomainAxiom, \
     OWLDataPropertyRangeAxiom
-from model.axioms.owlobjectpropertyaxiom import \
+from morelianoctua.model import \
     OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
     OWLDisjointObjectPropertiesAxiom, OWLInverseObjectPropertiesAxiom, \
     OWLObjectPropertyDomainAxiom, OWLObjectPropertyRangeAxiom
-from model.objects.annotation import OWLAnnotation
-from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
+from morelianoctua.model.objects import OWLAnnotation
+from morelianoctua.model.objects import OWLClass, OWLObjectIntersectionOf, \
     OWLObjectUnionOf, OWLObjectComplementOf, OWLObjectOneOf, \
     OWLObjectSomeValuesFrom, OWLObjectAllValuesFrom, OWLObjectHasValue, \
     OWLObjectHasSelf, OWLObjectMinCardinality, OWLObjectMaxCardinality, \
     OWLObjectExactCardinality, OWLDataSomeValuesFrom, OWLDataAllValuesFrom, \
     OWLDataHasValue, OWLDataMinCardinality, OWLDataMaxCardinality, \
     OWLDataExactCardinality
-from model.objects.datarange import OWLDataIntersectionOf, OWLDataComplementOf, \
+from morelianoctua.model.objects.datarange import OWLDataIntersectionOf, OWLDataComplementOf, \
     OWLDatatype, OWLDataOneOf, OWLDatatypeRestriction
-from model.objects.facet import OWLFacetRestriction
-from model.objects.individual import OWLAnonymousIndividual, OWLNamedIndividual
-from model.objects.property import OWLAnnotationProperty, OWLObjectInverseOf, \
+from morelianoctua.model.objects import OWLFacetRestriction
+from morelianoctua.model.objects import OWLAnonymousIndividual, OWLNamedIndividual
+from morelianoctua.model.objects import OWLAnnotationProperty, OWLObjectInverseOf, \
     OWLObjectProperty, OWLDataProperty
-from parsing.functional import FunctionalSyntaxParser
+from morelianoctua.parsing.functional import FunctionalSyntaxParser
 
 
 class TestFunctionalSyntaxParser(unittest.TestCase):
@@ -798,9 +797,9 @@ class TestFunctionalSyntaxParser(unittest.TestCase):
             OWLDatatype(XSD.string),
             {
                 OWLFacetRestriction(
-                    model.objects.facet.MIN_LENGTH, Literal(5, None, XSD.int)),
+                    morelianoctua.model.objects.facet.MIN_LENGTH, Literal(5, None, XSD.int)),
                 OWLFacetRestriction(
-                    model.objects.facet.MAX_LENGTH, Literal(9, None, XSD.int))
+                    morelianoctua.model.objects.facet.MAX_LENGTH, Literal(9, None, XSD.int))
             })
 
         prefixes = {

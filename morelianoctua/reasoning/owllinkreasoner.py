@@ -6,27 +6,29 @@ from xml.etree.ElementTree import Element, SubElement, tostring, fromstring
 import requests
 from rdflib import Literal, XSD
 
-from model import OWLOntology
-from model.axioms import OWLAxiom
-from model.axioms.assertionaxiom import OWLObjectPropertyAssertionAxiom, \
-    OWLClassAssertionAxiom, OWLDataPropertyAssertionAxiom
-from model.axioms.classaxiom import OWLSubClassOfAxiom, OWLDisjointClassesAxiom
-from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
+from morelianoctua.model import OWLOntology
+from morelianoctua.model.axioms import OWLAxiom
+from morelianoctua.model.axioms.assertionaxiom import \
+    OWLObjectPropertyAssertionAxiom, OWLDataPropertyAssertionAxiom, \
+    OWLClassAssertionAxiom
+from morelianoctua.model.axioms.classaxiom import OWLSubClassOfAxiom, OWLDisjointClassesAxiom
+from morelianoctua.model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
     OWLNamedIndividualDeclarationAxiom, OWLObjectPropertyDeclarationAxiom, \
     OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom
-from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom, \
-    OWLDataPropertyRangeAxiom
-from model.axioms.owlobjectpropertyaxiom import OWLObjectPropertyRangeAxiom, \
-    OWLObjectPropertyDomainAxiom
-from model.objects.classexpression import OWLClass, OWLClassExpression, \
-    OWLObjectSomeValuesFrom, OWLDataSomeValuesFrom, OWLObjectAllValuesFrom, \
-    OWLDataAllValuesFrom, OWLDataHasValue, OWLObjectUnionOf
-from model.objects.datarange import OWLDatatype, OWLDataRange
-from model.objects.individual import OWLNamedIndividual, OWLIndividual
-from model.objects.property import OWLObjectProperty, OWLAnnotationProperty, \
-    OWLDataProperty, OWLObjectPropertyExpression
-from parsing.functional import FunctionalSyntaxParser
-from reasoning import OWLReasoner
+from morelianoctua.model.axioms.owldatapropertyaxiom import \
+    OWLDataPropertyDomainAxiom, OWLDataPropertyRangeAxiom
+from morelianoctua.model.axioms.owlobjectpropertyaxiom import \
+    OWLObjectPropertyRangeAxiom, OWLObjectPropertyDomainAxiom
+from morelianoctua.model.objects.classexpression import OWLClass, \
+    OWLObjectSomeValuesFrom, OWLObjectAllValuesFrom, OWLDataSomeValuesFrom, \
+    OWLDataAllValuesFrom, OWLDataHasValue, OWLObjectUnionOf, OWLClassExpression
+from morelianoctua.model.objects.datarange import OWLDatatype, OWLDataRange
+from morelianoctua.model.objects.individual import OWLIndividual, \
+    OWLNamedIndividual
+from morelianoctua.model.objects.property import OWLObjectProperty, \
+    OWLAnnotationProperty, OWLDataProperty, OWLObjectPropertyExpression
+from morelianoctua.parsing.functional import FunctionalSyntaxParser
+from morelianoctua.reasoning import OWLReasoner
 
 
 def _translate_cls(cls: OWLClass) -> Element:

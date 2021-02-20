@@ -3,11 +3,13 @@ from typing import Set
 
 from rdflib import Literal
 
-from model import OWLOntology
-from model.axioms import OWLAxiom
-from model.objects.classexpression import OWLClass, OWLClassExpression
-from model.objects.individual import OWLNamedIndividual
-from model.objects.property import OWLDataProperty, OWLObjectPropertyExpression
+from morelianoctua.model import OWLOntology
+from morelianoctua.model.axioms import OWLAxiom
+from morelianoctua.model.objects.classexpression import OWLClass, \
+    OWLClassExpression
+from morelianoctua.model.objects.individual import OWLNamedIndividual
+from morelianoctua.model.objects.property import OWLDataProperty, \
+    OWLObjectPropertyExpression
 
 
 class OWLReasoner(ABC):

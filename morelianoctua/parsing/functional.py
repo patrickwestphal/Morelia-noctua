@@ -3,38 +3,41 @@ from pyparsing import Literal, alphas, Word, OneOrMore, nums, Optional, \
 from rdflib import Literal as RDFLiteral
 from rdflib import URIRef, BNode
 
-from model import OWLOntology
-from model.axioms import OWLAxiom
-from model.axioms.assertionaxiom import OWLClassAssertionAxiom, \
-    OWLObjectPropertyAssertionAxiom, OWLDataPropertyAssertionAxiom
-from model.axioms.classaxiom import OWLSubClassOfAxiom, \
+from morelianoctua.model import OWLOntology
+from morelianoctua.model.axioms import OWLAxiom
+from morelianoctua.model.axioms.assertionaxiom import \
+    OWLDataPropertyAssertionAxiom, OWLObjectPropertyAssertionAxiom, \
+    OWLClassAssertionAxiom
+from morelianoctua.model.axioms.classaxiom import OWLSubClassOfAxiom, \
     OWLEquivalentClassesAxiom, OWLDisjointClassesAxiom, OWLDisjointUnionAxiom
-from model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
+from morelianoctua.model.axioms.declarationaxiom import OWLClassDeclarationAxiom, \
     OWLDatatypeDeclarationAxiom, OWLObjectPropertyDeclarationAxiom, \
     OWLDataPropertyDeclarationAxiom, OWLAnnotationPropertyDeclarationAxiom, \
     OWLNamedIndividualDeclarationAxiom, OWLDeclarationAxiom
-from model.axioms.owldatapropertyaxiom import OWLDataPropertyDomainAxiom, \
-    OWLDataPropertyRangeAxiom
-from model.axioms.owlobjectpropertyaxiom import \
-    OWLSubObjectPropertyOfAxiom, OWLEquivalentObjectPropertiesAxiom, \
-    OWLDisjointObjectPropertiesAxiom, OWLInverseObjectPropertiesAxiom, \
-    OWLObjectPropertyDomainAxiom, OWLObjectPropertyRangeAxiom
-from model.objects import HasIRI
-from model.objects.annotation import OWLAnnotation
-from model.objects.classexpression import OWLClass, OWLObjectIntersectionOf, \
-    OWLObjectUnionOf, OWLObjectComplementOf, OWLObjectOneOf, \
-    OWLObjectSomeValuesFrom, OWLObjectAllValuesFrom, OWLObjectHasValue, \
-    OWLObjectHasSelf, OWLObjectMinCardinality, OWLObjectMaxCardinality, \
-    OWLObjectExactCardinality, OWLDataSomeValuesFrom, OWLDataAllValuesFrom, \
-    OWLDataHasValue, OWLDataMinCardinality, OWLDataMaxCardinality, \
-    OWLDataExactCardinality, OWLClassExpression
-from model.objects.datarange import OWLDataIntersectionOf, OWLDataUnionOf, \
+from morelianoctua.model.axioms.owldatapropertyaxiom import \
+    OWLDataPropertyDomainAxiom, OWLDataPropertyRangeAxiom
+from morelianoctua.model.axioms.owlobjectpropertyaxiom import \
+    OWLObjectPropertyRangeAxiom, OWLObjectPropertyDomainAxiom, \
+    OWLInverseObjectPropertiesAxiom, OWLDisjointObjectPropertiesAxiom, \
+    OWLEquivalentObjectPropertiesAxiom, OWLSubObjectPropertyOfAxiom
+from morelianoctua.model.objects import HasIRI
+from morelianoctua.model.objects.annotation import OWLAnnotation
+from morelianoctua.model.objects.classexpression import OWLClass, \
+    OWLObjectIntersectionOf, OWLObjectUnionOf, OWLObjectComplementOf, \
+    OWLObjectOneOf, OWLObjectSomeValuesFrom, OWLObjectAllValuesFrom, \
+    OWLObjectHasValue, OWLObjectHasSelf, OWLDataSomeValuesFrom, \
+    OWLDataAllValuesFrom, OWLDataHasValue, OWLClassExpression, \
+    OWLObjectExactCardinality, OWLObjectMaxCardinality, OWLObjectMinCardinality, \
+    OWLDataExactCardinality, OWLDataMaxCardinality, OWLDataMinCardinality
+from morelianoctua.model.objects.datarange import OWLDataIntersectionOf, OWLDataUnionOf, \
     OWLDataComplementOf, OWLDatatype, OWLDataOneOf, OWLDatatypeRestriction
-from model.objects.facet import OWLFacetRestriction
-from model.objects.individual import OWLNamedIndividual, OWLAnonymousIndividual
-from model.objects.property import OWLAnnotationProperty, OWLObjectProperty, \
-    OWLDataProperty, OWLObjectInverseOf, OWLObjectPropertyExpression
-from parsing import OWLParser
+from morelianoctua.model.objects.facet import OWLFacetRestriction
+from morelianoctua.model.objects.individual import OWLAnonymousIndividual, \
+    OWLNamedIndividual
+from morelianoctua.model.objects.property import OWLAnnotationProperty, \
+    OWLObjectProperty, OWLDataProperty, OWLObjectInverseOf, \
+    OWLObjectPropertyExpression
+from morelianoctua.parsing import OWLParser
 
 
 class FunctionalSyntaxParser(OWLParser):
