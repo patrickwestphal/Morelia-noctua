@@ -577,6 +577,16 @@ class OWLLinkReasoner(OWLReasoner):
             tostring(request_element))
         etree = fromstring(response.content)
 
+        # <ResponseMessage xmlns="http://www.owllink.org/owllink#"
+        #      xml:base="http://www.owllink.org/owllink"
+        #      xmlns:owl="http://www.w3.org/2002/07/owl#"
+        #      xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+        #     <SetOfObjectProperties>
+        #         <owl:ObjectProperty IRI="http://dl-learner.org/ont/objProp1"/>
+        #         <owl:ObjectProperty IRI="http://dl-learner.org/ont/objProp2"/>
+        #         <owl:ObjectProperty IRI="http://dl-learner.org/ont/objProp3"/>
+        #     </SetOfObjectProperties>
+        # </ResponseMessage>
         object_properties = set()
         for oprop_node in etree.findall('*/owl:ObjectProperty', self._prefixes):
             object_properties.add(OWLObjectProperty(oprop_node.get('IRI')))
@@ -633,9 +643,6 @@ class OWLLinkReasoner(OWLReasoner):
         # return datatypes
 
     def get_all_data_properties(self) -> Set[OWLDataProperty]:
-        """
-        TODO: Implement and document
-        """
         request_element = self._init_request()
 
         get_all_data_properties = \
@@ -646,6 +653,17 @@ class OWLLinkReasoner(OWLReasoner):
             self.server_url,
             tostring(request_element))
         etree = fromstring(response.content)
+
+        # <ResponseMessage xmlns="http://www.owllink.org/owllink#"
+        #      xml:base="http://www.owllink.org/owllink"
+        #      xmlns:owl="http://www.w3.org/2002/07/owl#"
+        #      xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+        #     <SetOfDataProperties>
+        #         <owl:DataProperty IRI="http://dl-learner.org/ont/dprop1"/>
+        #         <owl:DataProperty IRI="http://dl-learner.org/ont/dprop2"/>
+        #         <owl:DataProperty IRI="http://dl-learner.org/ont/dprop3"/>
+        #     </SetOfDataProperties>
+        # </ResponseMessage>
 
         data_properties = set()
         for dprop_node in etree.findall('*/owl:DataProperty', self._prefixes):
