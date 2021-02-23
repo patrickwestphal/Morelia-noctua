@@ -704,7 +704,29 @@ class OWLLinkReasoner(OWLReasoner):
         """
         TODO: Implement and document
         """
-        raise NotImplementedError()
+        request_element = self._init_request()
+
+        is_satisfiable_element = SubElement(request_element, 'IsKBSatisfiable')
+        is_satisfiable_element.set('kb', self.kb_uri)
+
+        response = requests.post(
+            self.server_url,
+            tostring(request_element))
+        etree = fromstring(response.content)
+
+        # <ResponseMessage xmlns="http://www.owllink.org/owllink#"
+        #      xml:base="http://www.owllink.org/owllink"
+        #      xmlns:owl="http://www.w3.org/2002/07/owl#"
+        #      xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+        #     <BooleanResponse result="false"/>
+        # </ResponseMessage>
+
+        response_elem = \
+            etree.find('.//{http://www.owllink.org/owllink#}BooleanResponse')
+
+        is_satisfiable = response_elem.attrib['result'].lower() == 'true'
+
+        return is_satisfiable
 
     def is_kb_consistently_declared(self) -> bool:
         """
