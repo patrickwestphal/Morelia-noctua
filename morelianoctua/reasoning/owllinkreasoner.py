@@ -674,9 +674,9 @@ class OWLLinkReasoner(OWLReasoner):
     def get_all_data_properties(self) -> Set[OWLDataProperty]:
         request_element = self._init_request()
 
-        get_all_data_properties = \
+        get_all_data_properties_element = \
             SubElement(request_element, 'GetAllDataProperties')
-        get_all_data_properties.set('kb', self.kb_uri)
+        get_all_data_properties_element.set('kb', self.kb_uri)
 
         response = requests.post(
             self.server_url,
