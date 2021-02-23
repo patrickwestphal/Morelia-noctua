@@ -231,6 +231,15 @@ def _translate_owl_obj_property_assertion_axiom(
 def _translate_owl_data_property_assertion_axiom(
         axiom: OWLDataPropertyAssertionAxiom) -> Element:
 
+    # e.g.:
+    # <owl:DataPropertyAssertion>
+    #   <owl:DataProperty IRI="http://dl-learner.org/dprop01"/>
+    #   <owl:NamedIndividual IRI="http://dl-learner.org/d285"/>
+    #   <owl:Literal datatypeIRI="http://www.w3.org/2001/XMLSchema#boolean">
+    #       false
+    #   </owl:Literal>
+    # </owl:DataPropertyAssertion>
+
     axiom_element = Element('owl:DataPropertyAssertion')
     obj_prop_element = SubElement(axiom_element, 'owl:DataProperty')
     obj_prop_element.set('IRI', str(axiom.owl_property.iri))
@@ -241,7 +250,7 @@ def _translate_owl_data_property_assertion_axiom(
     value_literal_element = SubElement(axiom_element, 'owl:Literal')
     value_literal_element.text = str(axiom.value)
     if axiom.value.datatype:
-        value_literal_element.set('datatype', axiom.value.datatype)
+        value_literal_element.set('datatypeIRI', axiom.value.datatype)
 
     return axiom_element
 
