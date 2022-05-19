@@ -16,6 +16,12 @@ class OWLNamedIndividual(OWLIndividual, HasIRI):
     def __hash__(self):
         return self._hash_idx * hash(self.iri)
 
+    def __str__(self):
+        return f'<{self.iri}>'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLAnonymousIndividual(OWLIndividual):
     _hash_idx = 109
@@ -38,3 +44,9 @@ class OWLAnonymousIndividual(OWLIndividual):
 
     def __hash__(self):
         return self._hash_idx * hash(self.bnode)
+
+    def __str__(self):
+        return f'_:{str(self.bnode)}'
+
+    def __repr__(self):
+        return str(self)

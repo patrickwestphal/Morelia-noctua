@@ -49,6 +49,12 @@ class OWLSubObjectPropertyOfAxiom(OWLObjectPropertyAxiom):
 
         return tmp
 
+    def __str__(self):
+        return f'SubObjectPropertyOf({self.sub_property} {self.super_property})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class HasObjectProperties(OWLAxiom):
     @staticmethod
@@ -99,6 +105,12 @@ class OWLEquivalentObjectPropertiesAxiom(
 
         return tmp
 
+    def __str__(self):
+        return f'EquivalentObjectProperties({" ".join(self.properties)})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLDisjointObjectPropertiesAxiom(
         OWLObjectPropertyAxiom, HasObjectProperties):
@@ -131,6 +143,12 @@ class OWLDisjointObjectPropertiesAxiom(
                 map(lambda a: hash(a), self.annotations))
 
         return tmp
+
+    def __str__(self):
+        return f'DisjointObjectProperties({" ".join(self.properties)})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLInverseObjectPropertiesAxiom(OWLObjectPropertyAxiom):
@@ -169,6 +187,12 @@ class OWLInverseObjectPropertiesAxiom(OWLObjectPropertyAxiom):
 
         return tmp
 
+    def __str__(self):
+        return f'InverseObjectProperties({self.first} {self.second})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLObjectPropertyDomainAxiom(OWLObjectPropertyAxiom):
     _hash_idx = 223
@@ -206,6 +230,12 @@ class OWLObjectPropertyDomainAxiom(OWLObjectPropertyAxiom):
 
         return tmp
 
+    def __str__(self):
+        return f'ObjectPropertyDomain({self.object_property} {self.domain})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLObjectPropertyRangeAxiom(OWLObjectPropertyAxiom):
     _hash_idx = 227
@@ -242,3 +272,9 @@ class OWLObjectPropertyRangeAxiom(OWLObjectPropertyAxiom):
                 map(lambda a: hash(a), self.annotations))
 
         return tmp
+
+    def __str__(self):
+        return f'ObjectPropertyRange({self.object_property} {self.range_ce})'
+
+    def __repr__(self):
+        return str(self)

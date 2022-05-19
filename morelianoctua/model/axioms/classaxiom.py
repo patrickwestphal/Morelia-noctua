@@ -44,6 +44,12 @@ class OWLSubClassOfAxiom(OWLClassAxiom):
 
         return tmp
 
+    def __str__(self):
+        return f'SubClassOf({self.sub_class} {self.super_class})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLEquivalentClassesAxiom(OWLClassAxiom):
     _hash_idx = 149
@@ -75,6 +81,14 @@ class OWLEquivalentClassesAxiom(OWLClassAxiom):
 
         return tmp
 
+    def __str__(self):
+        return \
+            f'EquivalentClasses(' \
+            f'{" ".join([str(ce) for ce in self.class_expressions])})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLDisjointClassesAxiom(OWLClassAxiom):
     _hash_idx = 151
@@ -105,6 +119,14 @@ class OWLDisjointClassesAxiom(OWLClassAxiom):
                 map(lambda a: hash(a), self.annotations))
 
         return tmp
+
+    def __str__(self):
+        return \
+            f'DisjointClasses(' \
+            f'{" ".join([str(ce) for ce in self.class_expressions])})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLDisjointUnionAxiom(OWLClassAxiom, HasOperands):

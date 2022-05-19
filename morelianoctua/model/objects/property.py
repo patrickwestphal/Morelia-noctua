@@ -50,6 +50,9 @@ class OWLObjectInverseOf(OWLObjectPropertyExpression):
     def __hash__(self):
         return self._hash_idx * hash(self.inverse_property)
 
+    def __repr__(self):
+        return f'ObjectInverseOf({self.inverse_property})'
+
 
 class OWLDataProperty(OWLProperty):
     _hash_idx = 137

@@ -31,3 +31,14 @@ class OWLFacetRestriction(OWLObject):
 
     def __hash__(self):
         return self._hash_idx * hash(self.facet) + hash(self.facet_value)
+
+    def __str__(self):
+        return_str = f'<{self.facet}> "{self.facet_value.value}"'
+
+        if self.facet_value.datatype is not None:
+            return_str += f'^^<{self.facet_value.datatype}>'
+
+        return return_str
+
+    def __repr__(self):
+        return str(self)

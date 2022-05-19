@@ -1,6 +1,6 @@
 from functools import reduce
 
-from rdflib import Literal
+from rdflib import Literal, URIRef
 
 from morelianoctua.model.objects import HasDatatypeOperands, HasIRI, OWLObject
 from morelianoctua.model.objects.facet import OWLFacetRestriction
@@ -25,6 +25,12 @@ class OWLDatatype(OWLDataRange, HasIRI):
     def __hash__(self):
         return self._hash_idx * hash(self.iri)
 
+    def __str__(self):
+        return f'<{self.iri}>'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLDataIntersectionOf(OWLDataRange, HasDatatypeOperands):
     _hash_idx = 79
@@ -36,6 +42,13 @@ class OWLDataIntersectionOf(OWLDataRange, HasDatatypeOperands):
         return reduce(
             lambda l, r: self._hash_idx*l+r,
             map(lambda o: hash(o), self.operands))
+
+    def __str__(self):
+        return \
+            f'DataIntersectionOf({" ".join([str(o) for o in self.operands])})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLDataUnionOf(OWLDataRange, HasDatatypeOperands):
@@ -49,12 +62,23 @@ class OWLDataUnionOf(OWLDataRange, HasDatatypeOperands):
             lambda l, r: self._hash_idx*l+r,
             map(lambda o: hash(o), self.operands))
 
+    def __str__(self):
+        return \
+            f'DataUnionOf(' \
+            f'{" ".join([str(drange) for drange in self.operands])})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLDataComplementOf(OWLDataRange):
     _hash_idx = 89
 
     def __init__(self, data_range: OWLDataRange):
-        self.data_range = data_range
+        if isinstance(data_range, URIRef):
+            self.data_range = OWLDatatype(data_range)
+        else:
+            self.data_range = data_range
 
     def __eq__(self, other):
         if not isinstance(other, OWLDataComplementOf):
@@ -64,6 +88,12 @@ class OWLDataComplementOf(OWLDataRange):
 
     def __hash__(self):
         return self._hash_idx * hash(self.data_range)
+
+    def __str__(self):
+        return f'DataComplementOf({str(self.data_range)})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLDataOneOf(OWLDataRange):
@@ -86,6 +116,13 @@ class OWLDataOneOf(OWLDataRange):
         return reduce(
             lambda l, r: self._hash_idx*l+r,
             map(lambda l: hash(l), self.operands))
+
+    def __str__(self):
+        operands_strs = [f'"{o.value}"^^<{o.datatype}>' for o in self.operands]
+        return f'DataOneOf({" ".join(operands_strs)})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLDatatypeRestriction(OWLDataRange):
@@ -110,3 +147,11 @@ class OWLDatatypeRestriction(OWLDataRange):
         return self._hash_idx * hash(self.datatype) + \
                reduce(lambda l, r: l*r,
                       map(lambda fr: hash(fr), self.facet_restrictions))
+
+    def __str__(self):
+        return \
+            f'DatatypeRestriction(<{self.datatype}> ' \
+            f'{" ".join([str(fr) for fr in self.facet_restrictions])})'
+
+    def __repr__(self):
+        return str(self)

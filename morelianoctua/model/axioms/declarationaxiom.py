@@ -31,6 +31,12 @@ class OWLClassDeclarationAxiom(OWLDeclarationAxiom):
 
         return tmp
 
+    def __str__(self):
+        return f'Declaration(Class({self.cls}))'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLDatatypeDeclarationAxiom(OWLDeclarationAxiom):
     _hash_idx = 167
@@ -48,6 +54,12 @@ class OWLDatatypeDeclarationAxiom(OWLDeclarationAxiom):
                 map(lambda a: hash(a), self.annotations))
 
         return tmp
+
+    def __str__(self):
+        return f'Declaration(Datatype({self.dtype}))'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLObjectPropertyDeclarationAxiom(OWLDeclarationAxiom):
@@ -70,6 +82,12 @@ class OWLObjectPropertyDeclarationAxiom(OWLDeclarationAxiom):
 
         return tmp
 
+    def __str__(self):
+        return f'Declaration(ObjectProperty({self.object_property}))'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLDataPropertyDeclarationAxiom(OWLDeclarationAxiom):
     _hash_idx = 179
@@ -87,6 +105,12 @@ class OWLDataPropertyDeclarationAxiom(OWLDeclarationAxiom):
                 map(lambda a: hash(a), self.annotations))
 
         return tmp
+
+    def __str__(self):
+        return f'Declaration(DatatypeProperty({self.data_property}))'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLAnnotationPropertyDeclarationAxiom(OWLDeclarationAxiom):
@@ -107,6 +131,12 @@ class OWLAnnotationPropertyDeclarationAxiom(OWLDeclarationAxiom):
                 map(lambda a: hash(a), self.annotations))
 
         return tmp
+
+    def __str__(self):
+        return f'AnnotationProperty({self.annotation_property})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLNamedIndividualDeclarationAxiom(OWLDeclarationAxiom):
@@ -129,3 +159,9 @@ class OWLNamedIndividualDeclarationAxiom(OWLDeclarationAxiom):
                 map(lambda a: hash(a), self.annotations))
 
         return tmp
+
+    def __str__(self):
+        return f'Declaration(NamedIndividual({self.individual}))'
+
+    def __repr__(self):
+        return str(self)

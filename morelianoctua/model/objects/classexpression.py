@@ -1,7 +1,7 @@
 from functools import reduce
 from typing import Set, Tuple
 
-from rdflib import OWL, Literal, RDFS
+from rdflib import OWL, Literal, RDFS, URIRef
 
 from morelianoctua.model.objects import HasIRI, HasOperands, OWLObject
 from morelianoctua.model.objects.datarange import OWLDataRange, OWLDatatype
@@ -23,6 +23,12 @@ class OWLClass(OWLClassExpression, HasIRI):
     def __hash__(self):
         return self._hash_idx * hash(self.iri)
 
+    def __str__(self):
+        return f'<{self.iri}>'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLObjectIntersectionOf(OWLClassExpression, HasOperands):
     _hash_idx = 7
@@ -35,6 +41,13 @@ class OWLObjectIntersectionOf(OWLClassExpression, HasOperands):
             lambda l, r: self._hash_idx*l+r,
             map(lambda o: hash(o), self.operands))
 
+    def __str__(self):
+        return \
+            f'ObjectIntersectionOf({" ".join([str(o) for o in self.operands])})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLObjectUnionOf(OWLClassExpression, HasOperands):
     _hash_idx = 11
@@ -46,6 +59,12 @@ class OWLObjectUnionOf(OWLClassExpression, HasOperands):
         return reduce(
             lambda l, r: self._hash_idx*l+r,
             map(lambda o: hash(o), self.operands))
+
+    def __str__(self):
+        return f'ObjectUnionOf({" ".join([str(o) for o in self.operands])})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLObjectComplementOf(OWLClassExpression):
@@ -87,6 +106,12 @@ class OWLObjectOneOf(OWLClassExpression):
             lambda l, r: self._hash_idx*l+r,
             map(lambda i: hash(i), self.individuals))
 
+    def __str__(self):
+        return f'ObjectOneOf({" ".join([str(i) for i in self.individuals])})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLObjectSomeValuesFrom(OWLClassExpression):
     _hash_idx = 19
@@ -108,6 +133,12 @@ class OWLObjectSomeValuesFrom(OWLClassExpression):
 
     def __hash__(self):
         return self._hash_idx * hash(self.owl_property) + hash(self.filler)
+
+    def __str__(self):
+        return f'ObjectSomeValuesFrom({self.owl_property} {self.filler})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLObjectAllValuesFrom(OWLClassExpression):
@@ -131,6 +162,12 @@ class OWLObjectAllValuesFrom(OWLClassExpression):
     def __hash__(self):
         return self._hash_idx * hash(self.property) + hash(self.filler)
 
+    def __str__(self):
+        return f'ObjectAllValuesFrom({self.property} {self.filler})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLObjectHasValue(OWLClassExpression):
     _hash_idx = 29
@@ -152,6 +189,12 @@ class OWLObjectHasValue(OWLClassExpression):
     def __hash__(self):
         return self._hash_idx * hash(self.property) + hash(self.value)
 
+    def __str__(self):
+        return f'ObjectHasValue({self.property} {self.value})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLObjectHasSelf(OWLClassExpression):
     _hash_idx = 31
@@ -167,6 +210,12 @@ class OWLObjectHasSelf(OWLClassExpression):
 
     def __hash__(self):
         return self._hash_idx * hash(self.property)
+
+    def __str__(self):
+        return f'ObjectHasSelf({self.property})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLObjectCardinalityRestriction(OWLClassExpression):
@@ -204,6 +253,14 @@ class OWLObjectMinCardinality(OWLObjectCardinalityRestriction):
         return self._hash_idx * hash(self.property) + \
                (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
 
+    def __str__(self):
+        return \
+            f'ObjectMinCardinality(' \
+            f'{self.cardinality} {self.property} {self.filler})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLObjectMaxCardinality(OWLObjectCardinalityRestriction):
     _hash_idx = 41
@@ -224,6 +281,14 @@ class OWLObjectMaxCardinality(OWLObjectCardinalityRestriction):
     def __hash__(self):
         return self._hash_idx * hash(self.property) + \
                (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
+
+    def __str__(self):
+        return \
+            f'ObjectMaxCardinality(' \
+            f'{self.cardinality} {self.property} {self.filler})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLObjectExactCardinality(OWLObjectCardinalityRestriction):
@@ -247,13 +312,25 @@ class OWLObjectExactCardinality(OWLObjectCardinalityRestriction):
         return self._hash_idx * hash(self.property) + \
                (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
 
+    def __str__(self):
+        return \
+            f'ObjectExactCardinality(' \
+            f'{self.cardinality} {self.property} {self.filler})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLDataSomeValuesFrom(OWLClassExpression):
     _hash_idx = 47
 
     def __init__(self, owl_property: OWLDataProperty, filler: OWLDataRange):
         self.property = owl_property
-        self.filler = filler
+
+        if isinstance(filler, URIRef):
+            self.filler = OWLDatatype(filler)
+        else:
+            self.filler = filler
 
     def __eq__(self, other):
         if not isinstance(other, OWLDataSomeValuesFrom):
@@ -265,13 +342,23 @@ class OWLDataSomeValuesFrom(OWLClassExpression):
     def __hash__(self):
         return self._hash_idx * hash(self.property) + hash(self.filler)
 
+    def __str__(self):
+        return f'DataSomeValuesFrom({self.property} {self.filler})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLDataAllValuesFrom(OWLClassExpression):
     _hash_idx = 53
 
     def __init__(self, owl_property: OWLDataProperty, filler: OWLDataRange):
         self.property = owl_property
-        self.filler = filler
+
+        if isinstance(filler, URIRef):
+            self.filler = OWLDatatype(filler)
+        else:
+            self.filler = filler
 
     def __eq__(self, other):
         if not isinstance(other, OWLDataAllValuesFrom):
@@ -282,6 +369,12 @@ class OWLDataAllValuesFrom(OWLClassExpression):
 
     def __hash__(self):
         return self._hash_idx * hash(self.property) + hash(self.filler)
+
+    def __str__(self):
+        return f'DataAllValuesFrom({self.property} {self.filler})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLDataHasValue(OWLClassExpression):
@@ -300,6 +393,16 @@ class OWLDataHasValue(OWLClassExpression):
 
     def __hash__(self):
         return self._hash_idx * hash(self.owl_property) + hash(self.value)
+
+    def __str__(self):
+        literal_str = f'"{self.value.value}"'
+        if self.value.datatype is not None:
+            literal_str += f'^^<{self.value.datatype}>'
+
+        return f'DataHasValue({self.owl_property} {literal_str})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLDataCardinalityRestriction(OWLClassExpression):
@@ -330,12 +433,22 @@ class OWLDataMinCardinality(OWLDataCardinalityRestriction):
 
         if filler is None:
             self.filler = OWLDatatype(RDFS.Literal)
+        elif isinstance(filler, URIRef):
+            self.filler = OWLDatatype(filler)
         else:
             self.filler = filler
 
     def __hash__(self):
         return self._hash_idx * hash(self.property) + \
                (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
+
+    def __str__(self):
+        return \
+            f'DataMinCardinality(' \
+            f'{self.cardinality} {self.property} {self.filler})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLDataMaxCardinality(OWLDataCardinalityRestriction):
@@ -352,12 +465,22 @@ class OWLDataMaxCardinality(OWLDataCardinalityRestriction):
 
         if filler is None:
             self.filler = OWLDatatype(RDFS.Literal)
+        elif isinstance(filler, URIRef):
+            self.filler = OWLDatatype(filler)
         else:
             self.filler = filler
 
     def __hash__(self):
         return self._hash_idx * hash(self.property) + \
                (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
+
+    def __str__(self):
+        return \
+            f'DataMaxCardinality(' \
+            f'{self.cardinality} {self.property} {self.filler})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class OWLDataExactCardinality(OWLDataCardinalityRestriction):
@@ -374,9 +497,19 @@ class OWLDataExactCardinality(OWLDataCardinalityRestriction):
 
         if filler is None:
             self.filler = OWLDatatype(RDFS.Literal)
+        elif isinstance(filler, URIRef):
+            self.filler = OWLDatatype(filler)
         else:
             self.filler = filler
 
     def __hash__(self):
         return self._hash_idx * hash(self.property) + \
                (self._hash_idx * hash(self.cardinality)) + hash(self.filler)
+
+    def __str__(self):
+        return \
+            f'DataExactCardinality(' \
+            f'{self.cardinality} {self.property} {self.filler})'
+
+    def __repr__(self):
+        return str(self)

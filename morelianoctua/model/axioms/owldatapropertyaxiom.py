@@ -48,6 +48,12 @@ class OWLDataPropertyDomainAxiom(OWLDataPropertyAxiom):
 
         return tmp
 
+    def __str__(self):
+        return f'DataPropertyDomain({self.data_property} {self.domain})'
+
+    def __repr__(self):
+        return str(self)
+
 
 class OWLDataPropertyRangeAxiom(OWLDataPropertyAxiom):
     _hash_idx = 251
@@ -84,3 +90,9 @@ class OWLDataPropertyRangeAxiom(OWLDataPropertyAxiom):
                 map(lambda a: hash(a), self.annotations))
 
         return tmp
+
+    def __str__(self):
+        return f'DataPropertyRange({self.data_property} {self.data_range})'
+
+    def __repr__(self):
+        return str(self)
